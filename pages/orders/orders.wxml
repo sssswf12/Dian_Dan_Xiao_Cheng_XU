@@ -1,0 +1,54 @@
+<view class="page page-without-dock orders-page">
+  <view class="orders-header">
+    <view>
+      <text class="orders-kicker">点单记录</text>
+      <text class="orders-title">我的订单</text>
+    </view>
+    <button class="refresh-button" loading="{{loading}}" bindtap="loadOrders">刷新</button>
+  </view>
+
+  <view class="nav-strip">
+    <button class="nav-button" bindtap="goMenu">点单</button>
+    <button class="nav-button" bindtap="goCart">购物车</button>
+    <button class="nav-button active">订单</button>
+  </view>
+
+  <view wx:if="{{orders.length}}" class="orders-list">
+    <view wx:for="{{orders}}" wx:key="recordId" class="order-card">
+      <view class="order-top">
+        <view class="order-title-group">
+          <text class="order-no">{{item.orderNo}}</text>
+          <text class="order-time">{{item.createdAtText}}</text>
+        </view>
+        <text class="status-pill {{item.statusClass}}">{{item.statusText}}</text>
+      </view>
+
+      <view class="order-meta-row">
+        <text>{{item.diningType}} · {{item.tableNo}}</text>
+        <text class="order-total">¥{{item.totalPriceText}}</text>
+      </view>
+
+      <view class="order-dishes">
+        <view wx:for="{{item.items}}" wx:for-item="dish" wx:key="id" class="order-dish">
+          <text class="dish-name">{{dish.name}}</text>
+          <text class="dish-qty">x{{dish.quantity}}</text>
+          <text class="dish-price">¥{{dish.subtotalText}}</text>
+        </view>
+      </view>
+
+      <text wx:if="{{item.remark}}" class="order-remark">备注：{{item.remark}}</text>
+
+      <view class="order-actions">
+        <button wx:if="{{item.status === 'pending'}}" class="danger-button action-button" data-index="{{index}}" bindtap="cancelOrder">取消</button>
+        <button class="ghost-button action-button" data-index="{{index}}" bindtap="reorder">再来一单</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:else class="empty-state">
+    <view class="empty-face"></view>
+    <text class="empty-title">还没有订单</text>
+    <text class="empty-text">提交第一笔订单后，这里会显示进度。</text>
+    <button class="primary-button empty-action" bindtap="goMenu">去点单</button>
+  </view>
+</view>

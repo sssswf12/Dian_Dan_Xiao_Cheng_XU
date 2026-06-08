@@ -1,0 +1,155 @@
+.orders-header {
+  min-height: 168rpx;
+  padding: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 2rpx solid #f0dfce;
+  border-radius: 16rpx;
+  background: linear-gradient(135deg, #d7efe5 0%, #fff0bb 52%, #ffd4dc 100%);
+  box-shadow: 0 14rpx 28rpx rgba(121, 92, 76, 0.1);
+}
+
+.orders-kicker {
+  display: block;
+  color: #6f6a77;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.orders-title {
+  display: block;
+  margin-top: 10rpx;
+  color: #332b39;
+  font-size: 42rpx;
+  font-weight: 900;
+}
+
+.refresh-button {
+  width: 138rpx;
+  height: 66rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #403541;
+  font-size: 26rpx;
+  font-weight: 800;
+  background: #ffffff;
+  border: 2rpx solid #efddcc;
+}
+
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 18rpx;
+}
+
+.order-card {
+  padding: 22rpx;
+  border: 2rpx solid #f0dfce;
+  border-radius: 16rpx;
+  background: #ffffff;
+  box-shadow: 0 12rpx 24rpx rgba(124, 96, 72, 0.08);
+}
+
+.order-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.order-title-group {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.order-no {
+  color: #332b39;
+  font-size: 30rpx;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
+.order-time {
+  margin-top: 8rpx;
+  color: #8a7a84;
+  font-size: 23rpx;
+}
+
+.order-meta-row {
+  margin-top: 18rpx;
+  padding: 16rpx;
+  display: flex;
+  justify-content: space-between;
+  gap: 16rpx;
+  color: #635564;
+  font-size: 25rpx;
+  border-radius: 16rpx;
+  background: #fff8ef;
+}
+
+.order-total {
+  color: #ff6f70;
+  font-weight: 900;
+}
+
+.order-dishes {
+  margin-top: 18rpx;
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.order-dish {
+  display: grid;
+  grid-template-columns: 1fr 80rpx 130rpx;
+  gap: 12rpx;
+  align-items: center;
+  color: #4a414c;
+  font-size: 26rpx;
+}
+
+.dish-name {
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.dish-qty {
+  color: #8a7a84;
+  text-align: center;
+}
+
+.dish-price {
+  color: #4a414c;
+  text-align: right;
+  font-weight: 700;
+}
+
+.order-remark {
+  display: block;
+  margin-top: 18rpx;
+  padding: 14rpx 16rpx;
+  color: #7f707a;
+  font-size: 24rpx;
+  line-height: 1.5;
+  border-radius: 16rpx;
+  background: #f7f0fa;
+}
+
+.order-actions {
+  margin-top: 20rpx;
+  display: flex;
+  gap: 12rpx;
+  justify-content: flex-end;
+}
+
+.action-button {
+  width: 168rpx;
+}
+
+.empty-action {
+  width: 220rpx;
+  margin: 26rpx auto 0;
+}

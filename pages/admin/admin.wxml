@@ -1,0 +1,109 @@
+<view class="page page-without-dock admin-page">
+  <view wx:if="{{!authorized}}" class="auth-panel">
+    <view class="auth-mascot">
+      <view class="lock-top"></view>
+      <view class="lock-body">
+        <view class="lock-dot"></view>
+      </view>
+    </view>
+    <text class="auth-title">店主入口</text>
+    <text class="auth-text">输入口令后查看和处理订单。</text>
+    <input class="auth-input" password placeholder="管理员口令" value="{{pinInput}}" bindinput="onPinInput" maxlength="24" />
+    <button class="primary-button auth-button" bindtap="login">进入管理</button>
+    <button class="ghost-button auth-back" bindtap="goMenu">返回点单</button>
+  </view>
+
+  <view wx:else>
+    <view class="admin-header">
+      <view>
+        <text class="admin-kicker">店主工作台</text>
+        <text class="admin-title">订单管理</text>
+      </view>
+      <button class="logout-button" bindtap="logout">退出</button>
+    </view>
+
+    <view class="nav-strip">
+      <button class="nav-button" bindtap="goMenu">点单</button>
+      <button class="nav-button" bindtap="goOrders">订单</button>
+      <button class="nav-button active">店主</button>
+    </view>
+
+    <view class="stats-grid">
+      <view class="stat-item">
+        <text class="stat-value">{{stats.pendingCount}}</text>
+        <text class="stat-label">待确认</text>
+      </view>
+      <view class="stat-item stat-active">
+        <text class="stat-value">{{stats.activeCount}}</text>
+        <text class="stat-label">处理中</text>
+      </view>
+      <view class="stat-item stat-revenue">
+        <text class="stat-value">¥{{stats.todayRevenueText}}</text>
+        <text class="stat-label">今日订单</text>
+      </view>
+    </view>
+
+    <scroll-view class="status-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+      <view class="status-track">
+        <view
+          wx:for="{{statusFilters}}"
+          wx:key="id"
+          class="status-tab {{activeStatus === item.id ? 'active' : ''}}"
+          data-status="{{item.id}}"
+          bindtap="selectStatus"
+        >
+          {{item.name}}
+        </view>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{orders.length}}" class="admin-orders">
+      <view wx:for="{{orders}}" wx:key="recordId" class="admin-order-card">
+        <view class="order-top">
+          <view class="order-title-group">
+            <text class="order-no">{{item.orderNo}}</text>
+            <text class="order-time">{{item.createdAtText}}</text>
+          </view>
+          <text class="status-pill {{item.statusClass}}">{{item.statusText}}</text>
+        </view>
+
+        <view class="order-meta-row">
+          <text>{{item.diningType}} · {{item.tableNo}}</text>
+          <text class="order-total">¥{{item.totalPriceText}}</text>
+        </view>
+
+        <view class="order-dishes">
+          <view wx:for="{{item.items}}" wx:for-item="dish" wx:key="id" class="order-dish">
+            <text class="dish-name">{{dish.name}}</text>
+            <text class="dish-qty">x{{dish.quantity}}</text>
+            <text class="dish-price">¥{{dish.subtotalText}}</text>
+          </view>
+        </view>
+
+        <text wx:if="{{item.remark}}" class="order-remark">备注：{{item.remark}}</text>
+
+        <view class="admin-actions">
+          <button class="ghost-button action-button" data-index="{{index}}" bindtap="copyOrder">复制</button>
+          <button
+            wx:for="{{item.actions}}"
+            wx:for-item="action"
+            wx:key="status"
+            class="{{action.danger ? 'danger-button' : 'primary-button'}} action-button"
+            data-id="{{item.recordId}}"
+            data-status="{{action.status}}"
+            bindtap="updateStatus"
+          >
+            {{action.text}}
+          </button>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="empty-state">
+      <view class="empty-face"></view>
+      <text class="empty-title">当前没有订单</text>
+      <text class="empty-text">切换状态或下拉刷新再看看。</text>
+      <button class="ghost-button empty-action" loading="{{loading}}" bindtap="loadOrders">刷新</button>
+    </view>
+  </view>
+</view>

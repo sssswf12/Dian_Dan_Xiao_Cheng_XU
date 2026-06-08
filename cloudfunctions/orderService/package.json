@@ -1,0 +1,9 @@
+{
+  "name": "orderService",
+  "version": "1.0.0",
+  "description": "Order service cloud function for cute ordering mini program.",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

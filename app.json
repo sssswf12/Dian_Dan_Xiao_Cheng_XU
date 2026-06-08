@@ -1,0 +1,18 @@
+{
+  "pages": [
+    "pages/menu/menu",
+    "pages/cart/cart",
+    "pages/orders/orders",
+    "pages/admin/admin"
+  ],
+  "window": {
+    "navigationBarTitleText": "\u8f6f\u7cd6\u5c0f\u98df\u94fa",
+    "navigationBarBackgroundColor": "#FFF4D7",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FFF9EE",
+    "backgroundTextStyle": "dark"
+  },
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "sitemapLocation": "sitemap.json"
+}
