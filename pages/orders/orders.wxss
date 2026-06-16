@@ -25,6 +25,14 @@
   font-weight: 900;
 }
 
+.orders-user {
+  display: block;
+  margin-top: 10rpx;
+  color: #6f6a77;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
 .refresh-button {
   width: 138rpx;
   height: 66rpx;
@@ -104,7 +112,7 @@
 
 .order-dish {
   display: grid;
-  grid-template-columns: 1fr 80rpx 130rpx;
+  grid-template-columns: 1fr 80rpx 80rpx;
   gap: 12rpx;
   align-items: center;
   color: #4a414c;
@@ -121,7 +129,7 @@
   text-align: center;
 }
 
-.dish-price {
+.dish-unit {
   color: #4a414c;
   text-align: right;
   font-weight: 700;

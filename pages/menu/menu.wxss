@@ -13,7 +13,8 @@
 }
 
 .hero-copy {
-  width: 430rpx;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   position: relative;
@@ -32,13 +33,6 @@
   font-size: 46rpx;
   font-weight: 900;
   line-height: 1.15;
-}
-
-.hero-note {
-  margin-top: 18rpx;
-  color: #6c5d68;
-  font-size: 25rpx;
-  line-height: 1.45;
 }
 
 .mascot {
@@ -175,6 +169,7 @@
 
 .search-box {
   height: 78rpx;
+  margin-top: 20rpx;
   padding: 0 22rpx;
   display: flex;
   align-items: center;
@@ -261,8 +256,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   border-radius: 16rpx;
   border: 2rpx solid rgba(82, 61, 50, 0.12);
+}
+
+.dish-image {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .plate {
@@ -344,7 +346,7 @@
 }
 
 .dish-name {
-  max-width: 310rpx;
+  max-width: 100%;
   color: #312937;
   font-size: 31rpx;
   font-weight: 850;
@@ -365,9 +367,9 @@
   align-items: baseline;
 }
 
-.dish-price {
+.dish-category {
   color: #ff6f70;
-  font-size: 34rpx;
+  font-size: 28rpx;
   font-weight: 900;
 }
 
@@ -429,10 +431,11 @@
 
 .cart-dock {
   position: fixed;
-  left: 24rpx;
-  right: 24rpx;
-  bottom: 34rpx;
+  left: 50%;
+  bottom: calc(132rpx + env(safe-area-inset-bottom));
   z-index: 20;
+  width: calc(100% - 48rpx);
+  max-width: 432px;
   height: 104rpx;
   padding: 0 16rpx 0 24rpx;
   display: flex;
@@ -442,6 +445,7 @@
   border-radius: 16rpx;
   background: #403541;
   box-shadow: 0 18rpx 34rpx rgba(56, 43, 44, 0.24);
+  transform: translateX(-50%);
 }
 
 .cart-summary {
@@ -454,11 +458,10 @@
   font-size: 24rpx;
 }
 
-.cart-price {
+.cart-tip {
   margin-top: 8rpx;
-  color: #ffffff;
-  font-size: 34rpx;
-  font-weight: 900;
+  color: #fff5dd;
+  font-size: 22rpx;
 }
 
 .cart-submit {

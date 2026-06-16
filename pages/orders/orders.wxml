@@ -3,17 +3,19 @@
     <view>
       <text class="orders-kicker">点单记录</text>
       <text class="orders-title">我的订单</text>
+      <text class="orders-user">{{currentUser ? currentUser.name : '请先登录'}}</text>
     </view>
     <button class="refresh-button" loading="{{loading}}" bindtap="loadOrders">刷新</button>
   </view>
 
-  <view class="nav-strip">
-    <button class="nav-button" bindtap="goMenu">点单</button>
-    <button class="nav-button" bindtap="goCart">购物车</button>
-    <button class="nav-button active">订单</button>
+  <view wx:if="{{!currentUser}}" class="empty-state">
+    <view class="empty-face"></view>
+    <text class="empty-title">请先登录</text>
+    <text class="empty-text">登录后这里只显示当前成员自己的订单。</text>
+    <button class="primary-button empty-action" bindtap="goProfile">去登录</button>
   </view>
 
-  <view wx:if="{{orders.length}}" class="orders-list">
+  <view wx:elif="{{orders.length}}" class="orders-list">
     <view wx:for="{{orders}}" wx:key="recordId" class="order-card">
       <view class="order-top">
         <view class="order-title-group">
@@ -24,15 +26,15 @@
       </view>
 
       <view class="order-meta-row">
-        <text>{{item.diningType}} · {{item.tableNo}}</text>
-        <text class="order-total">¥{{item.totalPriceText}}</text>
+        <text>{{item.locationText}}</text>
+        <text class="order-total">{{item.totalCount}} 件</text>
       </view>
 
       <view class="order-dishes">
         <view wx:for="{{item.items}}" wx:for-item="dish" wx:key="id" class="order-dish">
           <text class="dish-name">{{dish.name}}</text>
           <text class="dish-qty">x{{dish.quantity}}</text>
-          <text class="dish-price">¥{{dish.subtotalText}}</text>
+          <text class="dish-unit">{{dish.unit}}</text>
         </view>
       </view>
 
@@ -48,7 +50,14 @@
   <view wx:else class="empty-state">
     <view class="empty-face"></view>
     <text class="empty-title">还没有订单</text>
-    <text class="empty-text">提交第一笔订单后，这里会显示进度。</text>
+    <text class="empty-text">确认下单后，这里会显示进度。</text>
     <button class="primary-button empty-action" bindtap="goMenu">去点单</button>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="bottom-nav-item" bindtap="goMenu">点单</view>
+    <view class="bottom-nav-item" bindtap="goCart">确认</view>
+    <view class="bottom-nav-item active">订单</view>
+    <view class="bottom-nav-item" bindtap="goProfile">我</view>
   </view>
 </view>

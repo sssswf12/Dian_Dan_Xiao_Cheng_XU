@@ -1,15 +1,17 @@
 {
   "pages": [
+    "pages/account/account",
     "pages/menu/menu",
     "pages/cart/cart",
     "pages/orders/orders",
-    "pages/admin/admin"
+    "pages/admin/admin",
+    "pages/menu-edit/menu-edit"
   ],
   "window": {
-    "navigationBarTitleText": "\u8f6f\u7cd6\u5c0f\u98df\u94fa",
-    "navigationBarBackgroundColor": "#FFF4D7",
+    "navigationBarTitleText": "",
+    "navigationBarBackgroundColor": "#F8F6F2",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FFF9EE",
+    "backgroundColor": "#F8F6F2",
     "backgroundTextStyle": "dark"
   },
   "style": "v2",

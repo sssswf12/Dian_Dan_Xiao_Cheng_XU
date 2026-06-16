@@ -1,14 +1,11 @@
-const { getMenuItem } = require('./menu');
-const { formatPrice } = require('./format');
+const { getDefaultMenuItem, normalizeMenuItem } = require('./menu');
 
-const CART_KEY = 'cute_order_cart_v1';
+const CART_KEY = 'family_order_cart_v1';
 
 function emptyCart() {
   return {
     items: [],
     totalCount: 0,
-    totalPrice: 0,
-    totalPriceText: '0',
   };
 }
 
@@ -17,31 +14,38 @@ function normalizeQuantity(value) {
   return Number.isNaN(quantity) || quantity < 0 ? 0 : quantity;
 }
 
+function normalizeCartItem(item) {
+  const normalized = normalizeMenuItem(item);
+
+  return {
+    id: normalized.id,
+    category: normalized.category,
+    categoryName: normalized.categoryName,
+    name: normalized.name,
+    desc: normalized.desc,
+    unit: normalized.unit,
+    art: normalized.art,
+    themeBg: normalized.themeBg,
+    themeAccent: normalized.themeAccent,
+    imageUrl: normalized.imageUrl,
+    quantity: normalizeQuantity(item.quantity) || 1,
+  };
+}
+
 function summarize(items) {
   const nextItems = (items || [])
-    .map(function normalizeItem(item) {
-      return Object.assign({}, item, {
-        price: Number(item.price || 0),
-        priceText: formatPrice(item.price),
-        quantity: normalizeQuantity(item.quantity),
-      });
-    })
+    .map(normalizeCartItem)
     .filter(function keepItem(item) {
-      return item.quantity > 0;
+      return item.quantity > 0 && item.name;
     });
 
   const totalCount = nextItems.reduce(function count(sum, item) {
     return sum + item.quantity;
   }, 0);
-  const totalPrice = nextItems.reduce(function price(sum, item) {
-    return sum + item.price * item.quantity;
-  }, 0);
 
   return {
     items: nextItems,
     totalCount: totalCount,
-    totalPrice: totalPrice,
-    totalPriceText: formatPrice(totalPrice),
   };
 }
 
@@ -65,8 +69,16 @@ function saveCart(cart) {
   return nextCart;
 }
 
-function addItem(id) {
-  const menuItem = getMenuItem(id);
+function resolveItem(itemOrId) {
+  if (typeof itemOrId === 'string') {
+    return getDefaultMenuItem(itemOrId);
+  }
+
+  return itemOrId;
+}
+
+function addItem(itemOrId) {
+  const menuItem = resolveItem(itemOrId);
 
   if (!menuItem) {
     return getCart();
@@ -75,25 +87,13 @@ function addItem(id) {
   const cart = getCart();
   const items = cart.items.slice();
   const index = items.findIndex(function findItem(item) {
-    return item.id === id;
+    return item.id === menuItem.id;
   });
 
   if (index >= 0) {
     items[index].quantity += 1;
   } else {
-    items.push({
-      id: menuItem.id,
-      category: menuItem.category,
-      categoryName: menuItem.categoryName,
-      name: menuItem.name,
-      price: menuItem.price,
-      priceText: menuItem.priceText,
-      unit: menuItem.unit,
-      art: menuItem.art,
-      themeBg: menuItem.themeBg,
-      themeAccent: menuItem.themeAccent,
-      quantity: 1,
-    });
+    items.push(Object.assign({}, normalizeCartItem(menuItem), { quantity: 1 }));
   }
 
   return saveCart({ items: items });
@@ -141,25 +141,11 @@ function fillFromOrder(orderItems) {
   const items = [];
 
   (orderItems || []).forEach(function pushOrderItem(orderItem) {
-    const menuItem = getMenuItem(orderItem.id);
-
-    if (!menuItem) {
-      return;
-    }
-
-    items.push({
-      id: menuItem.id,
-      category: menuItem.category,
-      categoryName: menuItem.categoryName,
-      name: menuItem.name,
-      price: menuItem.price,
-      priceText: menuItem.priceText,
-      unit: menuItem.unit,
-      art: menuItem.art,
-      themeBg: menuItem.themeBg,
-      themeAccent: menuItem.themeAccent,
-      quantity: normalizeQuantity(orderItem.quantity) || 1,
-    });
+    items.push(
+      Object.assign({}, normalizeCartItem(orderItem), {
+        quantity: normalizeQuantity(orderItem.quantity) || 1,
+      })
+    );
   });
 
   return saveCart({ items: items });

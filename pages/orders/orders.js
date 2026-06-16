@@ -1,13 +1,35 @@
+const accountService = require('../../utils/account-service');
 const orderService = require('../../utils/order-service');
 const cartStore = require('../../utils/cart');
 
 Page({
   data: {
+    currentUser: null,
     orders: [],
     loading: false,
   },
 
   onShow() {
+    const currentAdmin = accountService.getAdminSession();
+    const currentUser = accountService.getCurrentUser();
+
+    if (currentAdmin) {
+      wx.reLaunch({
+        url: '/pages/admin/admin',
+      });
+      return;
+    }
+
+    if (!currentUser) {
+      wx.reLaunch({
+        url: '/pages/account/account',
+      });
+      return;
+    }
+
+    this.setData({
+      currentUser: currentUser,
+    });
     this.loadOrders();
   },
 
@@ -16,12 +38,24 @@ Page({
   },
 
   loadOrders() {
+    const currentUser = accountService.getCurrentUser();
+
+    if (!currentUser) {
+      this.setData({
+        currentUser: null,
+        orders: [],
+      });
+      wx.stopPullDownRefresh();
+      return Promise.resolve();
+    }
+
     this.setData({
       loading: true,
+      currentUser: currentUser,
     });
 
     return orderService
-      .getMyOrders()
+      .getMyOrders(currentUser.id)
       .then((orders) => {
         this.setData({
           orders: orders,
@@ -43,8 +77,9 @@ Page({
 
   cancelOrder(event) {
     const order = this.data.orders[event.currentTarget.dataset.index];
+    const currentUser = this.data.currentUser;
 
-    if (!order) {
+    if (!order || !currentUser) {
       return;
     }
 
@@ -63,7 +98,7 @@ Page({
         });
 
         orderService
-          .cancelMyOrder(order.recordId)
+          .cancelMyOrder(order.recordId, currentUser.id)
           .then(() => {
             wx.hideLoading();
             wx.showToast({
@@ -92,32 +127,33 @@ Page({
 
     cartStore.fillFromOrder(order.items);
     wx.showToast({
-      title: '已放入购物车',
+      title: '已放入已选内容',
       icon: 'success',
     });
 
     setTimeout(function goToCart() {
-      wx.navigateTo({
+      wx.reLaunch({
         url: '/pages/cart/cart',
       });
     }, 400);
   },
 
+  goProfile() {
+    wx.reLaunch({
+      url: '/pages/account/account',
+    });
+  },
+
   goMenu() {
-    wx.navigateTo({
+    wx.reLaunch({
       url: '/pages/menu/menu',
     });
   },
 
   goCart() {
-    wx.navigateTo({
+    wx.reLaunch({
       url: '/pages/cart/cart',
     });
   },
 
-  goAdmin() {
-    wx.navigateTo({
-      url: '/pages/admin/admin',
-    });
-  },
 });

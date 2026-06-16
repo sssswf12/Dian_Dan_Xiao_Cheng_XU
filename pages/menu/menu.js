@@ -1,23 +1,71 @@
 const config = require('../../config/index');
-const { CATEGORIES, MENU_ITEMS } = require('../../utils/menu');
+const { CATEGORIES } = require('../../utils/menu');
+const accountService = require('../../utils/account-service');
 const cartStore = require('../../utils/cart');
+const menuService = require('../../utils/menu-service');
 
 Page({
   data: {
     shop: config.SHOP,
+    currentUser: null,
     categories: CATEGORIES,
     activeCategory: 'all',
     keyword: '',
+    allItems: [],
     menuList: [],
     cart: cartStore.getCart(),
-  },
-
-  onLoad() {
-    this.refreshMenu();
+    loading: false,
   },
 
   onShow() {
-    this.refreshMenu();
+    const currentAdmin = accountService.getAdminSession();
+    const currentUser = accountService.getCurrentUser();
+
+    if (currentAdmin) {
+      wx.reLaunch({
+        url: '/pages/admin/admin',
+      });
+      return;
+    }
+
+    if (!currentUser) {
+      wx.reLaunch({
+        url: '/pages/account/account',
+      });
+      return;
+    }
+
+    this.setData({
+      currentUser: currentUser,
+      cart: cartStore.getCart(),
+    });
+    this.loadMenu();
+  },
+
+  loadMenu() {
+    this.setData({
+      loading: true,
+    });
+
+    return menuService
+      .listMenuItems()
+      .then((items) => {
+        this.setData({
+          allItems: items,
+        });
+        this.refreshMenu(cartStore.getCart());
+      })
+      .catch((error) => {
+        wx.showToast({
+          title: error.message || '菜单加载失败',
+          icon: 'none',
+        });
+      })
+      .finally(() => {
+        this.setData({
+          loading: false,
+        });
+      });
   },
 
   refreshMenu(cart) {
@@ -30,9 +78,10 @@ Page({
       cartMap[item.id] = item.quantity;
     });
 
-    const menuList = MENU_ITEMS.filter(function filterByCategory(item) {
-      return activeCategory === 'all' || item.category === activeCategory;
-    })
+    const menuList = this.data.allItems
+      .filter(function filterByCategory(item) {
+        return activeCategory === 'all' || item.category === activeCategory;
+      })
       .filter(function filterByKeyword(item) {
         if (!keyword) {
           return true;
@@ -41,7 +90,8 @@ Page({
         return (
           item.name.toLowerCase().indexOf(keyword) >= 0 ||
           item.desc.toLowerCase().indexOf(keyword) >= 0 ||
-          item.categoryName.toLowerCase().indexOf(keyword) >= 0
+          item.categoryName.toLowerCase().indexOf(keyword) >= 0 ||
+          item.tag.toLowerCase().indexOf(keyword) >= 0
         );
       })
       .map(function attachCount(item) {
@@ -54,6 +104,23 @@ Page({
       cart: nextCart,
       menuList: menuList,
     });
+  },
+
+  requireUser() {
+    if (this.data.currentUser) {
+      return true;
+    }
+
+    wx.showToast({
+      title: '请先登录',
+      icon: 'none',
+    });
+    setTimeout(function goLogin() {
+      wx.reLaunch({
+        url: '/pages/account/account',
+      });
+    }, 300);
+    return false;
   },
 
   onSearchInput(event) {
@@ -70,8 +137,19 @@ Page({
     this.refreshMenu();
   },
 
+  findMenuItem(id) {
+    return this.data.allItems.find(function findItem(item) {
+      return item.id === id;
+    });
+  },
+
   addItem(event) {
-    const cart = cartStore.addItem(event.currentTarget.dataset.id);
+    if (!this.requireUser()) {
+      return;
+    }
+
+    const item = this.findMenuItem(event.currentTarget.dataset.id);
+    const cart = cartStore.addItem(item);
     this.refreshMenu(cart);
   },
 
@@ -85,28 +163,33 @@ Page({
   },
 
   goCart() {
+    if (!this.requireUser()) {
+      return;
+    }
+
     if (!this.data.cart.totalCount) {
       wx.showToast({
-        title: '先选一点想吃的',
+        title: '先选一点需要的内容',
         icon: 'none',
       });
       return;
     }
 
-    wx.navigateTo({
+    wx.reLaunch({
       url: '/pages/cart/cart',
     });
   },
 
+  goProfile() {
+    wx.reLaunch({
+      url: '/pages/account/account',
+    });
+  },
+
   goOrders() {
-    wx.navigateTo({
+    wx.reLaunch({
       url: '/pages/orders/orders',
     });
   },
 
-  goAdmin() {
-    wx.navigateTo({
-      url: '/pages/admin/admin',
-    });
-  },
 });

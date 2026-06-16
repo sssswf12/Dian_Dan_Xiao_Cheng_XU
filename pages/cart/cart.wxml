@@ -2,7 +2,8 @@
   <view class="cart-header">
     <view>
       <text class="cart-kicker">{{shop.name}}</text>
-      <text class="cart-title">确认订单</text>
+      <text class="cart-title">确认下单</text>
+      <text class="cart-note">当前成员：{{currentUser ? currentUser.name : '未登录'}}</text>
     </view>
     <view class="cart-basket">
       <view class="basket-handle"></view>
@@ -13,38 +14,38 @@
     </view>
   </view>
 
-  <view class="nav-strip">
-    <button class="nav-button" bindtap="goMenu">点单</button>
-    <button class="nav-button active">购物车</button>
-    <button class="nav-button" bindtap="goOrders">订单</button>
-  </view>
-
   <view wx:if="{{cart.items.length}}">
     <view class="section-title">
-      <text>已选菜品</text>
+      <text>已选内容</text>
       <button class="clear-button" bindtap="clearCart">清空</button>
     </view>
 
     <view class="cart-list">
       <view wx:for="{{cart.items}}" wx:key="id" class="cart-item">
         <view class="cart-art art-{{item.art}}" style="background: {{item.themeBg}};">
-          <view class="cart-art-dot" style="background: {{item.themeAccent}};"></view>
+          <image wx:if="{{item.imageUrl}}" class="cart-image" src="{{item.imageUrl}}" mode="aspectFill" />
+          <view wx:else class="cart-art-dot" style="background: {{item.themeAccent}};"></view>
         </view>
         <view class="cart-info">
           <text class="cart-item-name">{{item.name}}</text>
-          <text class="cart-item-meta">¥{{item.priceText}} / {{item.unit}}</text>
+          <text class="cart-item-meta">{{item.categoryName}} / {{item.unit}}</text>
         </view>
         <view class="stepper">
           <button class="stepper-button" data-id="{{item.id}}" bindtap="decreaseItem">−</button>
           <text class="stepper-count">{{item.quantity}}</text>
-          <button class="stepper-button" data-id="{{item.id}}" bindtap="increaseItem">+</button>
+          <button class="stepper-button" data-index="{{index}}" bindtap="increaseItem">+</button>
         </view>
       </view>
     </view>
 
     <view class="order-form">
       <view class="section-title form-title">
-        <text>用餐信息</text>
+        <text>下单信息</text>
+      </view>
+
+      <view class="form-row">
+        <text class="form-label">成员</text>
+        <view class="form-static" bindtap="goProfile">{{currentUser ? currentUser.name : '点击登录'}}</view>
       </view>
 
       <view class="form-row">
@@ -55,29 +56,36 @@
       </view>
 
       <view class="form-row">
-        <text class="form-label">桌号</text>
-        <input class="form-input" placeholder="例如 3 号桌 / 小会议室" value="{{tableNo}}" bindinput="onTableInput" maxlength="24" />
+        <text class="form-label">位置</text>
+        <input class="form-input" placeholder="例如 客厅 / 房间 / 不填也可以" value="{{location}}" bindinput="onLocationInput" maxlength="24" />
       </view>
 
       <view class="textarea-row">
         <text class="form-label">备注</text>
-        <textarea class="form-textarea" placeholder="口味、忌口、打包等需求" value="{{remark}}" bindinput="onRemarkInput" maxlength="120" auto-height />
+        <textarea class="form-textarea" placeholder="口味、温度、切法或其他需求" value="{{remark}}" bindinput="onRemarkInput" maxlength="120" auto-height />
       </view>
     </view>
 
     <view class="checkout-panel">
       <view>
-        <text class="checkout-label">合计 {{cart.totalCount}} 件</text>
-        <text class="checkout-price">¥{{cart.totalPriceText}}</text>
+        <text class="checkout-label">共 {{cart.totalCount}} 件</text>
+        <text class="checkout-tip">确认后会提交订单</text>
       </view>
-      <button class="primary-button submit-button" loading="{{submitting}}" bindtap="submitOrder">提交订单</button>
+      <button class="primary-button submit-button" loading="{{submitting}}" bindtap="submitOrder">确认下单</button>
     </view>
   </view>
 
   <view wx:else class="empty-state">
     <view class="empty-face"></view>
-    <text class="empty-title">购物车是空的</text>
-    <text class="empty-text">先去菜单里选几样想吃的。</text>
+    <text class="empty-title">还没有选择内容</text>
+    <text class="empty-text">先去点单页选几样需要的。</text>
     <button class="primary-button empty-action" bindtap="goMenu">去点单</button>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="bottom-nav-item" bindtap="goMenu">点单</view>
+    <view class="bottom-nav-item active">确认</view>
+    <view class="bottom-nav-item" bindtap="goOrders">订单</view>
+    <view class="bottom-nav-item" bindtap="goProfile">我</view>
   </view>
 </view>

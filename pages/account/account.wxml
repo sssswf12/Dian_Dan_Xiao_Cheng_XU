@@ -1,0 +1,55 @@
+<view class="page page-without-dock account-page {{currentUser ? 'profile-mode' : 'login-mode'}}">
+  <view wx:if="{{currentUser}}" class="profile-panel">
+    <view class="profile-head">
+      <view class="profile-avatar">{{currentUser.initial}}</view>
+      <view class="profile-info">
+        <text class="profile-title">我</text>
+        <text class="profile-name">{{currentUser.name}}</text>
+      </view>
+    </view>
+
+    <view class="profile-list">
+      <view class="profile-row">
+        <text class="profile-label">账号</text>
+        <text class="profile-value">{{currentUser.account}}</text>
+      </view>
+      <view wx:if="{{currentUser.note}}" class="profile-row">
+        <text class="profile-label">备注</text>
+        <text class="profile-value">{{currentUser.note}}</text>
+      </view>
+    </view>
+
+    <button class="ghost-button logout-action" bindtap="logout">退出登录</button>
+  </view>
+
+  <view wx:elif="{{!currentAdmin}}" class="login-shell">
+    <view class="login-card">
+      <view class="login-brand">
+        <view class="brand-mark">点</view>
+        <view class="brand-text">
+          <text class="login-title">登录</text>
+          <text class="login-subtitle">{{shop.name}}</text>
+        </view>
+      </view>
+
+      <view class="login-form">
+        <view class="form-row">
+          <text class="form-label">账号</text>
+          <input class="form-input" placeholder="请输入账号" value="{{accountInput}}" bindinput="onAccountInput" maxlength="24" confirm-type="next" />
+        </view>
+        <view class="form-row">
+          <text class="form-label">密码</text>
+          <input class="form-input" password placeholder="请输入密码" value="{{passwordInput}}" bindinput="onPasswordInput" maxlength="32" confirm-type="done" bindconfirm="login" />
+        </view>
+        <button class="primary-button login-button" loading="{{loading}}" bindtap="login">登录</button>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{currentUser}}" class="bottom-nav">
+    <view class="bottom-nav-item" bindtap="goMenu">点单</view>
+    <view class="bottom-nav-item" bindtap="goCart">确认</view>
+    <view class="bottom-nav-item" bindtap="goOrders">订单</view>
+    <view class="bottom-nav-item active">我</view>
+  </view>
+</view>

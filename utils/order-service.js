@@ -1,7 +1,7 @@
 const config = require('../config/index');
-const { formatDate, formatPrice, getStatusMeta } = require('./format');
+const { formatDate, getStatusMeta } = require('./format');
 
-const ORDERS_KEY = 'cute_order_orders_v1';
+const ORDERS_KEY = 'family_order_orders_v1';
 
 function canUseCloud() {
   return config.USE_CLOUD && wx.cloud && typeof wx.cloud.callFunction === 'function';
@@ -23,30 +23,33 @@ function createOrderNo() {
     .join('');
   const suffix = Math.floor(Math.random() * 900 + 100);
 
-  return 'A' + stamp + suffix;
+  return 'F' + stamp + suffix;
 }
 
 function getRecordId(order) {
   return order._id || order.id || order.orderId || '';
 }
 
+function normalizeStatus(status) {
+  if (status === 'accepted' || status === 'ready') {
+    return 'confirmed';
+  }
+
+  return status || 'pending';
+}
+
 function normalizeOrder(order) {
-  const status = order.status || 'pending';
+  const status = normalizeStatus(order.status);
   const meta = getStatusMeta(status);
   const items = (order.items || []).map(function normalizeItem(item) {
-    return Object.assign({}, item, {
-      price: Number(item.price || 0),
-      priceText: formatPrice(item.price),
-      subtotal: Number(item.price || 0) * Number(item.quantity || 0),
-      subtotalText: formatPrice(Number(item.price || 0) * Number(item.quantity || 0)),
-    });
+    return {
+      id: item.id,
+      name: item.name,
+      categoryName: item.categoryName || '',
+      unit: item.unit || '份',
+      quantity: Number(item.quantity || 0),
+    };
   });
-  const totalPrice = Number(
-    order.totalPrice ||
-      items.reduce(function sumPrice(sum, item) {
-        return sum + item.subtotal;
-      }, 0)
-  );
   const totalCount = Number(
     order.totalCount ||
       items.reduce(function sumCount(sum, item) {
@@ -54,6 +57,9 @@ function normalizeOrder(order) {
       }, 0)
   );
   const createdAtMs = Number(order.createdAtMs || order.createdAt || Date.now());
+  const location = String(order.location || order.tableNo || '').trim();
+  const diningType = order.diningType || '家里吃';
+  const locationText = location ? diningType + ' · ' + location : diningType;
 
   return Object.assign({}, order, {
     id: getRecordId(order),
@@ -67,9 +73,13 @@ function normalizeOrder(order) {
     status: status,
     statusText: meta.text,
     statusClass: meta.className,
+    userId: order.userId || '',
+    userName: order.userName || '未登录账号',
+    diningType: diningType,
+    location: location,
+    locationText: locationText,
+    tableNo: location,
     totalCount: totalCount,
-    totalPrice: totalPrice,
-    totalPriceText: formatPrice(totalPrice),
     createdAtMs: createdAtMs,
     createdAtText: order.createdAtText || formatDate(createdAtMs),
     updatedAtText: order.updatedAtText || formatDate(order.updatedAtMs || order.updatedAt || createdAtMs),
@@ -91,17 +101,17 @@ function writeLocalOrders(orders) {
 
 function assertAdminPin(adminPin) {
   if (String(adminPin || '') !== String(config.ADMIN_PIN)) {
-    throw new Error('管理员口令不正确');
+    throw new Error('管理员密码不正确');
   }
 }
 
 function buildOrder(payload) {
+  const user = payload.user || {};
   const items = (payload.items || []).map(function mapItem(item) {
     return {
       id: item.id,
       name: item.name,
       categoryName: item.categoryName,
-      price: Number(item.price || 0),
       quantity: Number(item.quantity || 0),
       unit: item.unit,
     };
@@ -109,21 +119,27 @@ function buildOrder(payload) {
   const totalCount = items.reduce(function sumCount(sum, item) {
     return sum + item.quantity;
   }, 0);
-  const totalPrice = items.reduce(function sumPrice(sum, item) {
-    return sum + item.price * item.quantity;
-  }, 0);
   const now = Date.now();
+
+  if (!user.id || !user.name) {
+    throw new Error('请先登录账号');
+  }
+
+  if (!totalCount) {
+    throw new Error('订单里没有内容');
+  }
 
   return normalizeOrder({
     id: 'local_' + now + '_' + Math.floor(Math.random() * 1000),
     orderNo: createOrderNo(),
     status: 'pending',
-    diningType: payload.diningType || '堂食',
-    tableNo: String(payload.tableNo || '').trim(),
+    userId: user.id,
+    userName: user.name,
+    diningType: payload.diningType || '家里吃',
+    location: String(payload.location || '').trim(),
     remark: String(payload.remark || '').trim(),
     items: items,
     totalCount: totalCount,
-    totalPrice: totalPrice,
     createdAtMs: now,
     updatedAtMs: now,
   });
@@ -162,14 +178,20 @@ function createOrder(payload) {
   return Promise.resolve(order);
 }
 
-function getMyOrders() {
+function getMyOrders(userId) {
   if (canUseCloud()) {
-    return callOrderFunction('getMyOrders').then(function mapResult(result) {
+    return callOrderFunction('getMyOrders', {
+      userId: userId,
+    }).then(function mapResult(result) {
       return (result.orders || []).map(normalizeOrder);
     });
   }
 
-  return Promise.resolve(readLocalOrders());
+  return Promise.resolve(
+    readLocalOrders().filter(function filterOrder(order) {
+      return !userId || order.userId === userId;
+    })
+  );
 }
 
 function listOrders(adminPin, status) {
@@ -233,10 +255,11 @@ function updateOrderStatus(orderId, status, adminPin) {
   return Promise.resolve(orders[index]);
 }
 
-function cancelMyOrder(orderId) {
+function cancelMyOrder(orderId, userId) {
   if (canUseCloud()) {
     return callOrderFunction('cancelMyOrder', {
       orderId: orderId,
+      userId: userId,
     }).then(function mapResult(result) {
       return normalizeOrder(result.order);
     });
@@ -248,12 +271,12 @@ function cancelMyOrder(orderId) {
     return getRecordId(order) === orderId;
   });
 
-  if (index < 0) {
+  if (index < 0 || (userId && orders[index].userId !== userId)) {
     return Promise.reject(new Error('没有找到这笔订单'));
   }
 
   if (orders[index].status !== 'pending') {
-    return Promise.reject(new Error('订单已开始处理，不能取消'));
+    return Promise.reject(new Error('订单已确认，不能取消'));
   }
 
   orders[index] = normalizeOrder(

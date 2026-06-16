@@ -1,29 +1,43 @@
+const accountService = require('../../utils/account-service');
+const menuService = require('../../utils/menu-service');
 const orderService = require('../../utils/order-service');
-const { formatPrice, todayKey } = require('../../utils/format');
+const { todayKey } = require('../../utils/format');
 
-const ADMIN_PIN_KEY = 'cute_order_admin_pin_v1';
 const STATUS_FILTERS = [
   { id: 'all', name: '全部' },
   { id: 'pending', name: '待确认' },
-  { id: 'accepted', name: '制作中' },
-  { id: 'ready', name: '可取餐' },
+  { id: 'confirmed', name: '已确认' },
   { id: 'completed', name: '已完成' },
   { id: 'cancelled', name: '已取消' },
 ];
+const ADMIN_TABS = [
+  { id: 'orders', name: '订单' },
+  { id: 'menu', name: '菜单' },
+  { id: 'users', name: '成员' },
+  { id: 'me', name: '我' },
+];
+
+function createUserForm() {
+  return {
+    id: '',
+    account: '',
+    password: '',
+    name: '',
+    note: '',
+    enabled: true,
+    sort: 100,
+  };
+}
 
 function getOrderActions(order) {
   if (order.status === 'pending') {
     return [
-      { status: 'accepted', text: '接单' },
+      { status: 'confirmed', text: '确认' },
       { status: 'cancelled', text: '取消', danger: true },
     ];
   }
 
-  if (order.status === 'accepted') {
-    return [{ status: 'ready', text: '做好了' }];
-  }
-
-  if (order.status === 'ready') {
+  if (order.status === 'confirmed') {
     return [{ status: 'completed', text: '完成' }];
   }
 
@@ -42,55 +56,91 @@ function buildStats(orders) {
     return order.status === 'pending';
   }).length;
   const activeCount = orders.filter(function countActive(order) {
-    return order.status === 'accepted' || order.status === 'ready';
+    return order.status === 'confirmed';
   }).length;
-  const todayRevenue = orders.reduce(function sumRevenue(sum, order) {
-    if (todayKey(order.createdAtMs) !== today || order.status === 'cancelled') {
-      return sum;
-    }
-
-    return sum + Number(order.totalPrice || 0);
-  }, 0);
+  const todayCount = orders.filter(function countToday(order) {
+    return todayKey(order.createdAtMs) === today && order.status !== 'cancelled';
+  }).length;
 
   return {
     pendingCount: pendingCount,
     activeCount: activeCount,
-    todayRevenueText: formatPrice(todayRevenue),
+    todayCount: todayCount,
   };
+}
+
+function getAdminTabName(tabId) {
+  const matched = ADMIN_TABS.find(function findTab(tab) {
+    return tab.id === tabId;
+  });
+
+  return matched ? matched.name : ADMIN_TABS[0].name;
+}
+
+function isAdminTab(tabId) {
+  return ADMIN_TABS.some(function matchTab(tab) {
+    return tab.id === tabId;
+  });
 }
 
 Page({
   data: {
     authorized: false,
+    currentAdmin: null,
     adminPin: '',
-    pinInput: '',
+    adminAccountInput: '',
+    adminPasswordInput: '',
+    activeTab: 'orders',
+    activeTabName: getAdminTabName('orders'),
+    adminTabs: ADMIN_TABS,
     activeStatus: 'all',
     statusFilters: STATUS_FILTERS,
     allOrders: [],
     orders: [],
     stats: buildStats([]),
+    menuItems: [],
+    userForm: createUserForm(),
+    editingUserId: '',
+    users: [],
     loading: false,
   },
 
-  onLoad() {
-    const savedPin = wx.getStorageSync(ADMIN_PIN_KEY);
+  onLoad(options) {
+    const tab = options && options.tab;
 
-    if (!savedPin) {
-      return;
+    if (isAdminTab(tab)) {
+      this.setActiveTab(tab);
+    }
+  },
+
+  onShow() {
+    if (this.ensureAdminSession()) {
+      this.loadCurrentTab();
+    }
+  },
+
+  ensureAdminSession() {
+    const adminSession = accountService.getAdminSession();
+
+    if (!adminSession) {
+      this.setData({
+        authorized: false,
+        adminPin: '',
+        currentAdmin: null,
+      });
+      wx.reLaunch({
+        url: '/pages/account/account',
+      });
+      return false;
     }
 
     this.setData({
       authorized: true,
-      adminPin: savedPin,
-      pinInput: savedPin,
+      currentAdmin: adminSession,
+      adminPin: adminSession.adminPin,
+      adminAccountInput: adminSession.account,
     });
-    this.loadOrders();
-  },
-
-  onShow() {
-    if (this.data.authorized) {
-      this.loadOrders();
-    }
+    return true;
   },
 
   onPullDownRefresh() {
@@ -99,45 +149,66 @@ Page({
       return;
     }
 
-    this.loadOrders();
+    this.loadCurrentTab();
   },
 
-  onPinInput(event) {
+  onAdminAccountInput(event) {
     this.setData({
-      pinInput: event.detail.value,
+      adminAccountInput: event.detail.value,
+    });
+  },
+
+  onAdminPasswordInput(event) {
+    this.setData({
+      adminPasswordInput: event.detail.value,
     });
   },
 
   login() {
-    const adminPin = String(this.data.pinInput || '').trim();
+    const account = String(this.data.adminAccountInput || '').trim();
+    const password = String(this.data.adminPasswordInput || '').trim();
 
-    if (!adminPin) {
+    if (!account || !password) {
       wx.showToast({
-        title: '请输入口令',
+        title: '请输入账号和密码',
         icon: 'none',
       });
       return;
     }
 
-    this.setData({
-      adminPin: adminPin,
-      authorized: true,
-    });
-    wx.setStorageSync(ADMIN_PIN_KEY, adminPin);
-    this.loadOrders().catch(() => {
-      this.logout(false);
-    });
+    accountService
+      .loginAdmin(account, password)
+      .then((session) => {
+        this.setData({
+          adminPin: session.adminPin,
+          authorized: true,
+          adminPasswordInput: '',
+        });
+        this.loadCurrentTab().catch(() => {
+          this.logout(false);
+        });
+      })
+      .catch((error) => {
+        wx.showToast({
+          title: error.message || '登录失败',
+          icon: 'none',
+        });
+      });
   },
 
   logout(showToast) {
-    wx.removeStorageSync(ADMIN_PIN_KEY);
+    accountService.clearAdminSession();
     this.setData({
       authorized: false,
       adminPin: '',
-      pinInput: '',
+      currentAdmin: null,
+      adminAccountInput: '',
+      adminPasswordInput: '',
       allOrders: [],
       orders: [],
       stats: buildStats([]),
+      menuItems: [],
+      users: [],
     });
 
     if (showToast !== false) {
@@ -146,12 +217,64 @@ Page({
         icon: 'none',
       });
     }
+
+    wx.reLaunch({
+      url: '/pages/account/account',
+    });
   },
 
-  loadOrders() {
+  switchAdminTab(event) {
+    const nextTab = this.setActiveTab(event.currentTarget.dataset.tab);
+    this.loadCurrentTab(nextTab);
+  },
+
+  setActiveTab(tab) {
+    const nextTab = isAdminTab(tab) ? tab : 'orders';
+
     this.setData({
-      loading: true,
+      activeTab: nextTab,
+      activeTabName: getAdminTabName(nextTab),
     });
+    return nextTab;
+  },
+
+  loadCurrentTab(tab) {
+    if (!this.data.authorized) {
+      return Promise.resolve();
+    }
+
+    const activeTab = typeof tab === 'string' ? tab : this.data.activeTab;
+
+    if (activeTab === 'orders') {
+      return this.loadOrders().catch(this.handleLoadError);
+    }
+
+    if (activeTab === 'menu') {
+      return this.loadMenuItems().catch(this.handleLoadError);
+    }
+
+    if (activeTab === 'users') {
+      return this.loadUsers().catch(this.handleLoadError);
+    }
+
+    wx.stopPullDownRefresh();
+    return Promise.resolve();
+  },
+
+  handleLoadError(error) {
+    wx.stopPullDownRefresh();
+    wx.showToast({
+      title: error.message || '加载失败',
+      icon: 'none',
+    });
+  },
+
+  loadOrders(showLoading) {
+    if (showLoading !== false) {
+      this.setData({
+        loading: true,
+      });
+    }
 
     return orderService
       .listOrders(this.data.adminPin, 'all')
@@ -164,18 +287,13 @@ Page({
         });
         this.applyStatusFilter();
       })
-      .catch((error) => {
-        wx.showToast({
-          title: error.message || '加载失败',
-          icon: 'none',
-        });
-        return Promise.reject(error);
-      })
       .finally(() => {
-        this.setData({
-          loading: false,
-        });
-        wx.stopPullDownRefresh();
+        if (showLoading !== false) {
+          this.setData({
+            loading: false,
+          });
+          wx.stopPullDownRefresh();
+        }
       });
   },
 
@@ -214,7 +332,7 @@ Page({
           title: '已更新',
           icon: 'success',
         });
-        this.loadOrders();
+        this.loadOrders(false).catch(this.handleLoadError);
       })
       .catch((error) => {
         wx.hideLoading();
@@ -234,14 +352,15 @@ Page({
 
     const lines = [
       '订单号：' + order.orderNo,
+      '成员：' + order.userName,
       '状态：' + order.statusText,
-      '位置：' + order.diningType + ' · ' + order.tableNo,
-      '菜品：',
+      '位置：' + order.locationText,
+      '内容：',
     ].concat(
       order.items.map(function mapItem(item) {
-        return '- ' + item.name + ' x' + item.quantity + '，¥' + item.subtotalText;
+        return '- ' + item.name + ' x' + item.quantity + item.unit;
       }),
-      ['合计：¥' + order.totalPriceText, order.remark ? '备注：' + order.remark : '备注：无']
+      ['共计：' + order.totalCount + ' 件', order.remark ? '备注：' + order.remark : '备注：无']
     );
 
     wx.setClipboardData({
@@ -249,14 +368,198 @@ Page({
     });
   },
 
-  goMenu() {
+  loadMenuItems(showLoading) {
+    if (showLoading !== false) {
+      this.setData({
+        loading: true,
+      });
+    }
+
+    return menuService
+      .listMenuItems({ includeHidden: true })
+      .then((items) => {
+        this.setData({
+          menuItems: items,
+        });
+      })
+      .finally(() => {
+        if (showLoading !== false) {
+          this.setData({
+            loading: false,
+          });
+          wx.stopPullDownRefresh();
+        }
+      });
+  },
+
+  createItem() {
     wx.navigateTo({
+      url: '/pages/menu-edit/menu-edit',
+    });
+  },
+
+  editItem(event) {
+    const item = this.data.menuItems[event.currentTarget.dataset.index];
+
+    if (!item) {
+      return;
+    }
+
+    wx.navigateTo({
+      url: '/pages/menu-edit/menu-edit?id=' + encodeURIComponent(item.id),
+    });
+  },
+
+  toggleItem(event) {
+    const item = this.data.menuItems[event.currentTarget.dataset.index];
+
+    if (!item) {
+      return;
+    }
+
+    menuService
+      .toggleMenuItem(item.id, !item.enabled, this.data.adminPin)
+      .then(() => {
+        wx.showToast({
+          title: item.enabled ? '已下架' : '已上架',
+          icon: 'success',
+        });
+        this.loadMenuItems(false).catch(this.handleLoadError);
+      })
+      .catch((error) => {
+        wx.showToast({
+          title: error.message || '操作失败',
+          icon: 'none',
+        });
+      });
+  },
+
+  loadUsers(showLoading) {
+    if (showLoading !== false) {
+      this.setData({
+        loading: true,
+      });
+    }
+
+    return accountService
+      .listUsers({
+        includeDisabled: true,
+        adminPin: this.data.adminPin,
+      })
+      .then((users) => {
+        this.setData({
+          users: users,
+        });
+      })
+      .finally(() => {
+        if (showLoading !== false) {
+          this.setData({
+            loading: false,
+          });
+          wx.stopPullDownRefresh();
+        }
+      });
+  },
+
+  onUserInput(event) {
+    const field = event.currentTarget.dataset.field;
+
+    this.setData({
+      ['userForm.' + field]: event.detail.value,
+    });
+  },
+
+  onUserEnabledChange(event) {
+    this.setData({
+      'userForm.enabled': event.detail.value,
+    });
+  },
+
+  editUser(event) {
+    const user = this.data.users[event.currentTarget.dataset.index];
+
+    if (!user) {
+      return;
+    }
+
+    this.setData({
+      editingUserId: user.id,
+      userForm: Object.assign({}, user),
+      activeTab: 'users',
+      activeTabName: getAdminTabName('users'),
+    });
+  },
+
+  resetUserForm() {
+    this.setData({
+      editingUserId: '',
+      userForm: createUserForm(),
+    });
+  },
+
+  saveUser() {
+    const user = Object.assign({}, this.data.userForm, {
+      id: this.data.editingUserId || this.data.userForm.id,
+      sort: Number(this.data.userForm.sort || 100),
+    });
+
+    wx.showLoading({
+      title: '保存中',
+      mask: true,
+    });
+
+    accountService
+      .saveUser(user, this.data.adminPin)
+      .then(() => {
+        wx.hideLoading();
+        wx.showToast({
+          title: '已保存',
+          icon: 'success',
+        });
+        this.resetUserForm();
+        this.loadUsers(false).catch(this.handleLoadError);
+      })
+      .catch((error) => {
+        wx.hideLoading();
+        wx.showToast({
+          title: error.message || '保存失败',
+          icon: 'none',
+        });
+      });
+  },
+
+  toggleUser(event) {
+    const user = this.data.users[event.currentTarget.dataset.index];
+
+    if (!user) {
+      return;
+    }
+
+    accountService
+      .toggleUser(user.id, !user.enabled, this.data.adminPin)
+      .then(() => {
+        wx.showToast({
+          title: user.enabled ? '已停用' : '已启用',
+          icon: 'success',
+        });
+        this.loadUsers(false).catch(this.handleLoadError);
+      })
+      .catch((error) => {
+        wx.showToast({
+          title: error.message || '操作失败',
+          icon: 'none',
+        });
+      });
+  },
+
+  goMenu() {
+    wx.reLaunch({
       url: '/pages/menu/menu',
     });
   },
 
   goOrders() {
-    wx.navigateTo({
+    wx.reLaunch({
       url: '/pages/orders/orders',
     });
   },

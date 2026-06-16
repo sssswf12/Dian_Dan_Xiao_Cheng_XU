@@ -1,19 +1,41 @@
 const config = require('../../config/index');
+const accountService = require('../../utils/account-service');
 const cartStore = require('../../utils/cart');
 const orderService = require('../../utils/order-service');
 
 Page({
   data: {
     shop: config.SHOP,
+    currentUser: null,
     cart: cartStore.getCart(),
-    diningTypes: ['堂食', '自取'],
+    diningTypes: ['家里吃', '带走', '先备着'],
     diningTypeIndex: 0,
-    tableNo: '',
+    location: '',
     remark: '',
     submitting: false,
   },
 
   onShow() {
+    const currentAdmin = accountService.getAdminSession();
+    const currentUser = accountService.getCurrentUser();
+
+    if (currentAdmin) {
+      wx.reLaunch({
+        url: '/pages/admin/admin',
+      });
+      return;
+    }
+
+    if (!currentUser) {
+      wx.reLaunch({
+        url: '/pages/account/account',
+      });
+      return;
+    }
+
+    this.setData({
+      currentUser: currentUser,
+    });
     this.refreshCart();
   },
 
@@ -24,7 +46,8 @@ Page({
   },
 
   increaseItem(event) {
-    cartStore.addItem(event.currentTarget.dataset.id);
+    const item = this.data.cart.items[event.currentTarget.dataset.index];
+    cartStore.addItem(item);
     this.refreshCart();
   },
 
@@ -35,8 +58,8 @@ Page({
 
   clearCart() {
     wx.showModal({
-      title: '清空购物车',
-      content: '确定要清空已选菜品吗？',
+      title: '清空已选内容',
+      content: '确定要清空已选内容吗？',
       confirmColor: '#ff7f7f',
       success: (result) => {
         if (!result.confirm) {
@@ -55,9 +78,9 @@ Page({
     });
   },
 
-  onTableInput(event) {
+  onLocationInput(event) {
     this.setData({
-      tableNo: event.detail.value,
+      location: event.detail.value,
     });
   },
 
@@ -72,20 +95,25 @@ Page({
       return;
     }
 
+    const currentUser = accountService.getCurrentUser();
     const cart = cartStore.getCart();
-    const tableNo = String(this.data.tableNo || '').trim();
 
-    if (!cart.totalCount) {
+    if (!currentUser) {
       wx.showToast({
-        title: '购物车还是空的',
+        title: '请先登录',
         icon: 'none',
       });
+      setTimeout(function goLogin() {
+        wx.reLaunch({
+          url: '/pages/account/account',
+        });
+      }, 300);
       return;
     }
 
-    if (!tableNo) {
+    if (!cart.totalCount) {
       wx.showToast({
-        title: '请填写桌号或姓名',
+        title: '还没有选择内容',
         icon: 'none',
       });
       return;
@@ -101,21 +129,22 @@ Page({
 
     orderService
       .createOrder({
+        user: currentUser,
         items: cart.items,
         diningType: this.data.diningTypes[this.data.diningTypeIndex],
-        tableNo: tableNo,
+        location: this.data.location,
         remark: this.data.remark,
       })
       .then(() => {
         cartStore.clearCart();
         wx.hideLoading();
         wx.showToast({
-          title: '订单已提交',
+          title: '订单已发送',
           icon: 'success',
         });
 
         setTimeout(function redirectToOrders() {
-          wx.redirectTo({
+          wx.reLaunch({
             url: '/pages/orders/orders',
           });
         }, 500);
@@ -134,21 +163,22 @@ Page({
       });
   },
 
+  goProfile() {
+    wx.reLaunch({
+      url: '/pages/account/account',
+    });
+  },
+
   goMenu() {
-    wx.navigateTo({
+    wx.reLaunch({
       url: '/pages/menu/menu',
     });
   },
 
   goOrders() {
-    wx.navigateTo({
+    wx.reLaunch({
       url: '/pages/orders/orders',
     });
   },
 
-  goAdmin() {
-    wx.navigateTo({
-      url: '/pages/admin/admin',
-    });
-  },
 });

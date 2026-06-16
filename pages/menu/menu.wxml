@@ -1,11 +1,10 @@
 <view class="page menu-page">
   <view class="hero">
     <view class="hero-copy">
-      <text class="hero-kicker">{{shop.subtitle}}</text>
-      <text class="hero-title">{{shop.name}}</text>
-      <text class="hero-note">{{shop.notice}}</text>
+      <text class="hero-kicker">{{currentUser ? currentUser.name : ''}}</text>
+      <text class="hero-title">点单</text>
     </view>
-    <view class="mascot" bindlongpress="goAdmin">
+    <view class="mascot">
       <view class="mascot-ear mascot-ear-left"></view>
       <view class="mascot-ear mascot-ear-right"></view>
       <view class="mascot-face">
@@ -24,15 +23,9 @@
     </view>
   </view>
 
-  <view class="nav-strip">
-    <button class="nav-button active">点单</button>
-    <button class="nav-button" bindtap="goOrders">订单</button>
-    <button class="nav-button" bindtap="goAdmin">店主</button>
-  </view>
-
   <view class="search-box">
     <text class="search-icon">⌕</text>
-    <input class="search-input" placeholder="搜索菜品、口味或分类" value="{{keyword}}" bindinput="onSearchInput" confirm-type="search" />
+    <input class="search-input" placeholder="搜索菜品、饮品、甜品或水果" value="{{keyword}}" bindinput="onSearchInput" confirm-type="search" />
   </view>
 
   <scroll-view class="category-scroll" scroll-x enhanced show-scrollbar="{{false}}">
@@ -50,14 +43,15 @@
   </scroll-view>
 
   <view class="section-title">
-    <text>今日菜单</text>
-    <text class="menu-count">{{menuList.length}} 款</text>
+    <text>今日可选</text>
+    <text class="menu-count">{{menuList.length}} 项</text>
   </view>
 
   <view wx:if="{{menuList.length}}" class="dish-list">
     <view wx:for="{{menuList}}" wx:key="id" class="dish-card">
       <view class="dish-art art-{{item.art}}" style="background: {{item.themeBg}};">
-        <view class="plate">
+        <image wx:if="{{item.imageUrl}}" class="dish-image" src="{{item.imageUrl}}" mode="aspectFill" />
+        <view wx:else class="plate">
           <view class="food-shape food-main" style="background: {{item.themeAccent}};"></view>
           <view class="food-shape food-small"></view>
           <view class="food-shape food-dot"></view>
@@ -71,7 +65,7 @@
         </view>
         <text class="dish-desc">{{item.desc}}</text>
         <view class="dish-bottom">
-          <text class="dish-price">¥{{item.priceText}}</text>
+          <text class="dish-category">{{item.categoryName}}</text>
           <text class="dish-unit">/{{item.unit}}</text>
         </view>
       </view>
@@ -89,15 +83,22 @@
 
   <view wx:else class="empty-state">
     <view class="empty-face"></view>
-    <text class="empty-title">没有找到菜品</text>
+    <text class="empty-title">没有找到内容</text>
     <text class="empty-text">换个关键词或分类再看看。</text>
   </view>
 
   <view wx:if="{{cart.totalCount > 0}}" class="cart-dock">
     <view class="cart-summary">
       <text class="cart-title">{{cart.totalCount}} 件已选</text>
-      <text class="cart-price">¥{{cart.totalPriceText}}</text>
+      <text class="cart-tip">确认后会提交订单</text>
     </view>
-    <button class="cart-submit" bindtap="goCart">去下单</button>
+    <button class="cart-submit" bindtap="goCart">去确认</button>
+  </view>
+
+  <view class="bottom-nav">
+    <view class="bottom-nav-item active">点单</view>
+    <view class="bottom-nav-item" bindtap="goCart">确认</view>
+    <view class="bottom-nav-item" bindtap="goOrders">订单</view>
+    <view class="bottom-nav-item" bindtap="goProfile">我</view>
   </view>
 </view>

@@ -1,109 +1,216 @@
 <view class="page page-without-dock admin-page">
-  <view wx:if="{{!authorized}}" class="auth-panel">
-    <view class="auth-mascot">
-      <view class="lock-top"></view>
-      <view class="lock-body">
-        <view class="lock-dot"></view>
-      </view>
-    </view>
-    <text class="auth-title">店主入口</text>
-    <text class="auth-text">输入口令后查看和处理订单。</text>
-    <input class="auth-input" password placeholder="管理员口令" value="{{pinInput}}" bindinput="onPinInput" maxlength="24" />
-    <button class="primary-button auth-button" bindtap="login">进入管理</button>
-    <button class="ghost-button auth-back" bindtap="goMenu">返回点单</button>
-  </view>
-
-  <view wx:else>
+  <view wx:if="{{authorized}}">
     <view class="admin-header">
       <view>
-        <text class="admin-kicker">店主工作台</text>
-        <text class="admin-title">订单管理</text>
+        <text class="admin-kicker">管理端</text>
+        <text class="admin-title">{{activeTabName}}</text>
       </view>
-      <button class="logout-button" bindtap="logout">退出</button>
+      <button class="refresh-button" loading="{{loading}}" bindtap="loadCurrentTab">刷新</button>
     </view>
 
-    <view class="nav-strip">
-      <button class="nav-button" bindtap="goMenu">点单</button>
-      <button class="nav-button" bindtap="goOrders">订单</button>
-      <button class="nav-button active">店主</button>
-    </view>
-
-    <view class="stats-grid">
-      <view class="stat-item">
-        <text class="stat-value">{{stats.pendingCount}}</text>
-        <text class="stat-label">待确认</text>
-      </view>
-      <view class="stat-item stat-active">
-        <text class="stat-value">{{stats.activeCount}}</text>
-        <text class="stat-label">处理中</text>
-      </view>
-      <view class="stat-item stat-revenue">
-        <text class="stat-value">¥{{stats.todayRevenueText}}</text>
-        <text class="stat-label">今日订单</text>
-      </view>
-    </view>
-
-    <scroll-view class="status-scroll" scroll-x enhanced show-scrollbar="{{false}}">
-      <view class="status-track">
-        <view
-          wx:for="{{statusFilters}}"
-          wx:key="id"
-          class="status-tab {{activeStatus === item.id ? 'active' : ''}}"
-          data-status="{{item.id}}"
-          bindtap="selectStatus"
-        >
-          {{item.name}}
+    <view wx:if="{{activeTab === 'orders'}}">
+      <view class="stats-grid">
+        <view class="stat-item">
+          <text class="stat-value">{{stats.pendingCount}}</text>
+          <text class="stat-label">待确认</text>
+        </view>
+        <view class="stat-item stat-active">
+          <text class="stat-value">{{stats.activeCount}}</text>
+          <text class="stat-label">已确认</text>
+        </view>
+        <view class="stat-item stat-today">
+          <text class="stat-value">{{stats.todayCount}}</text>
+          <text class="stat-label">今日订单</text>
         </view>
       </view>
-    </scroll-view>
 
-    <view wx:if="{{orders.length}}" class="admin-orders">
-      <view wx:for="{{orders}}" wx:key="recordId" class="admin-order-card">
-        <view class="order-top">
-          <view class="order-title-group">
-            <text class="order-no">{{item.orderNo}}</text>
-            <text class="order-time">{{item.createdAtText}}</text>
-          </view>
-          <text class="status-pill {{item.statusClass}}">{{item.statusText}}</text>
-        </view>
-
-        <view class="order-meta-row">
-          <text>{{item.diningType}} · {{item.tableNo}}</text>
-          <text class="order-total">¥{{item.totalPriceText}}</text>
-        </view>
-
-        <view class="order-dishes">
-          <view wx:for="{{item.items}}" wx:for-item="dish" wx:key="id" class="order-dish">
-            <text class="dish-name">{{dish.name}}</text>
-            <text class="dish-qty">x{{dish.quantity}}</text>
-            <text class="dish-price">¥{{dish.subtotalText}}</text>
-          </view>
-        </view>
-
-        <text wx:if="{{item.remark}}" class="order-remark">备注：{{item.remark}}</text>
-
-        <view class="admin-actions">
-          <button class="ghost-button action-button" data-index="{{index}}" bindtap="copyOrder">复制</button>
-          <button
-            wx:for="{{item.actions}}"
-            wx:for-item="action"
-            wx:key="status"
-            class="{{action.danger ? 'danger-button' : 'primary-button'}} action-button"
-            data-id="{{item.recordId}}"
-            data-status="{{action.status}}"
-            bindtap="updateStatus"
+      <scroll-view class="status-scroll" scroll-x enhanced show-scrollbar="{{false}}">
+        <view class="status-track">
+          <view
+            wx:for="{{statusFilters}}"
+            wx:key="id"
+            class="status-tab {{activeStatus === item.id ? 'active' : ''}}"
+            data-status="{{item.id}}"
+            bindtap="selectStatus"
           >
-            {{action.text}}
-          </button>
+            {{item.name}}
+          </view>
+        </view>
+      </scroll-view>
+
+      <view wx:if="{{orders.length}}" class="admin-orders">
+        <view wx:for="{{orders}}" wx:key="recordId" class="admin-order-card">
+          <view class="order-top">
+            <view class="order-title-group">
+              <text class="order-no">{{item.orderNo}}</text>
+              <text class="order-time">{{item.createdAtText}}</text>
+            </view>
+            <text class="status-pill {{item.statusClass}}">{{item.statusText}}</text>
+          </view>
+
+          <view class="order-meta-row">
+            <view>
+              <text class="order-user">{{item.userName}}</text>
+              <text class="order-location">{{item.locationText}}</text>
+            </view>
+            <text class="order-total">{{item.totalCount}} 件</text>
+          </view>
+
+          <view class="order-dishes">
+            <view wx:for="{{item.items}}" wx:for-item="dish" wx:key="id" class="order-dish">
+              <text class="dish-name">{{dish.name}}</text>
+              <text class="dish-qty">x{{dish.quantity}}</text>
+              <text class="dish-unit">{{dish.unit}}</text>
+            </view>
+          </view>
+
+          <text wx:if="{{item.remark}}" class="order-remark">备注：{{item.remark}}</text>
+
+          <view class="admin-actions">
+            <button class="ghost-button action-button" data-index="{{index}}" bindtap="copyOrder">复制</button>
+            <button
+              wx:for="{{item.actions}}"
+              wx:for-item="action"
+              wx:key="status"
+              class="{{action.danger ? 'danger-button' : 'primary-button'}} action-button"
+              data-id="{{item.recordId}}"
+              data-status="{{action.status}}"
+              bindtap="updateStatus"
+            >
+              {{action.text}}
+            </button>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else class="empty-state">
+        <view class="empty-face"></view>
+        <text class="empty-title">当前没有订单</text>
+        <text class="empty-text">切换状态或下拉刷新再看看。</text>
+        <button class="ghost-button empty-action" loading="{{loading}}" bindtap="loadCurrentTab">刷新</button>
+      </view>
+    </view>
+
+    <view wx:elif="{{activeTab === 'menu'}}">
+      <view class="menu-toolbar">
+        <button class="primary-button add-content-button" bindtap="createItem">新增内容</button>
+      </view>
+
+      <view class="section-title">
+        <text>菜单列表</text>
+        <text class="menu-total">{{menuItems.length}} 项</text>
+      </view>
+
+      <view class="manage-list">
+        <view wx:for="{{menuItems}}" wx:key="id" class="manage-card menu-manage-card {{item.enabled ? '' : 'is-disabled'}}">
+          <view class="manage-thumb art-{{item.art}}" style="background: {{item.themeBg}};">
+            <image wx:if="{{item.imageUrl}}" class="manage-thumb-image" src="{{item.imageUrl}}" mode="aspectFill" />
+            <view wx:else class="manage-thumb-dot" style="background: {{item.themeAccent}};"></view>
+          </view>
+          <view class="manage-main">
+            <text class="manage-title">{{item.name}}</text>
+            <text class="manage-meta">{{item.metaText}}</text>
+            <text class="manage-desc">{{item.desc}}</text>
+          </view>
+          <view class="manage-actions">
+            <button class="ghost-button mini-action" data-index="{{index}}" bindtap="editItem">编辑</button>
+            <button class="{{item.enabled ? 'danger-button' : 'primary-button'}} mini-action" data-index="{{index}}" bindtap="toggleItem">{{item.enabled ? '下架' : '上架'}}</button>
+          </view>
         </view>
       </view>
     </view>
 
-    <view wx:else class="empty-state">
-      <view class="empty-face"></view>
-      <text class="empty-title">当前没有订单</text>
-      <text class="empty-text">切换状态或下拉刷新再看看。</text>
-      <button class="ghost-button empty-action" loading="{{loading}}" bindtap="loadOrders">刷新</button>
+    <view wx:elif="{{activeTab === 'users'}}">
+      <view class="manage-form">
+        <view class="section-title form-title">
+          <text>{{editingUserId ? '编辑成员' : '新增成员'}}</text>
+          <button wx:if="{{editingUserId}}" class="clear-button" bindtap="resetUserForm">取消</button>
+        </view>
+
+        <view class="form-row">
+          <text class="form-label">名称</text>
+          <input class="form-input" placeholder="例如 家人一" value="{{userForm.name}}" data-field="name" bindinput="onUserInput" maxlength="24" />
+        </view>
+        <view class="form-row">
+          <text class="form-label">账号</text>
+          <input class="form-input" placeholder="用于用户端登录" value="{{userForm.account}}" data-field="account" bindinput="onUserInput" maxlength="24" />
+        </view>
+        <view class="form-row">
+          <text class="form-label">密码</text>
+          <input class="form-input" placeholder="用于用户端登录" value="{{userForm.password}}" data-field="password" bindinput="onUserInput" maxlength="32" />
+        </view>
+        <view class="form-row">
+          <text class="form-label">备注</text>
+          <input class="form-input" placeholder="可不填" value="{{userForm.note}}" data-field="note" bindinput="onUserInput" maxlength="40" />
+        </view>
+        <view class="form-row">
+          <text class="form-label">排序</text>
+          <input class="form-input" type="number" placeholder="数字越小越靠前" value="{{userForm.sort}}" data-field="sort" bindinput="onUserInput" maxlength="6" />
+        </view>
+        <view class="form-row">
+          <text class="form-label">启用</text>
+          <switch checked="{{userForm.enabled}}" bindchange="onUserEnabledChange" color="#4aa783" />
+        </view>
+        <button class="primary-button save-button" bindtap="saveUser">{{editingUserId ? '保存成员' : '添加成员'}}</button>
+      </view>
+
+      <view class="section-title">
+        <text>成员列表</text>
+        <text class="menu-total">{{users.length}} 个</text>
+      </view>
+
+      <view class="manage-list">
+        <view wx:for="{{users}}" wx:key="id" class="manage-card {{item.enabled ? '' : 'is-disabled'}}">
+          <view class="user-avatar">{{item.initial}}</view>
+          <view class="manage-main">
+            <text class="manage-title">{{item.name}}</text>
+            <text class="manage-meta">账号：{{item.account}}</text>
+            <text class="manage-meta">{{item.note || '无备注'}}</text>
+          </view>
+          <view class="manage-actions">
+            <button class="ghost-button mini-action" data-index="{{index}}" bindtap="editUser">编辑</button>
+            <button class="{{item.enabled ? 'danger-button' : 'primary-button'}} mini-action" data-index="{{index}}" bindtap="toggleUser">{{item.enabled ? '停用' : '启用'}}</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else class="admin-profile">
+      <view class="profile-panel">
+        <view class="profile-head">
+          <view class="profile-avatar">管</view>
+          <view class="profile-info">
+            <text class="profile-title">我</text>
+            <text class="profile-name">{{currentAdmin ? currentAdmin.name : '管理员'}}</text>
+          </view>
+        </view>
+
+        <view class="profile-list">
+          <view class="profile-row">
+            <text class="profile-label">账号</text>
+            <text class="profile-value">{{currentAdmin ? currentAdmin.account : 'admin'}}</text>
+          </view>
+          <view class="profile-row">
+            <text class="profile-label">权限</text>
+            <text class="profile-value">订单、菜单、成员</text>
+          </view>
+        </view>
+
+        <button class="ghost-button profile-action" loading="{{loading}}" bindtap="loadCurrentTab">刷新数据</button>
+        <button class="danger-button profile-action" bindtap="logout">退出登录</button>
+      </view>
+    </view>
+
+    <view class="bottom-nav">
+      <view
+        wx:for="{{adminTabs}}"
+        wx:key="id"
+        class="bottom-nav-item {{activeTab === item.id ? 'active' : ''}}"
+        data-tab="{{item.id}}"
+        bindtap="switchAdminTab"
+      >
+        {{item.name}}
+      </view>
     </view>
   </view>
 </view>

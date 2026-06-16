@@ -1,6 +1,6 @@
 page {
   min-height: 100%;
-  background: #fff8ec;
+  background: #f8f6f2;
   color: #3a3042;
   font-size: 28rpx;
 }
@@ -27,35 +27,51 @@ button::after {
 
 .page {
   min-height: 100vh;
-  padding: 24rpx 24rpx 160rpx;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24rpx 24rpx calc(150rpx + env(safe-area-inset-bottom));
 }
 
 .page-without-dock {
-  padding-bottom: 40rpx;
+  padding-bottom: calc(150rpx + env(safe-area-inset-bottom));
 }
 
-.nav-strip {
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  z-index: 30;
+  width: 100%;
+  max-width: 480px;
+  min-height: 112rpx;
+  padding: 10rpx 18rpx calc(14rpx + env(safe-area-inset-bottom));
   display: flex;
-  gap: 12rpx;
-  margin: 20rpx 0;
+  align-items: center;
+  gap: 10rpx;
+  border-top: 2rpx solid #f0dfce;
+  background: #fffef9;
+  box-shadow: 0 -10rpx 24rpx rgba(84, 64, 54, 0.1);
+  transform: translateX(-50%);
 }
 
-.nav-button {
+.bottom-nav-item {
   flex: 1;
-  height: 68rpx;
+  min-width: 0;
+  height: 76rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
-  color: #64556d;
-  border: 2rpx solid #f0dfce;
-  box-shadow: 0 8rpx 18rpx rgba(132, 98, 73, 0.08);
+  color: #6c5a68;
+  font-size: 25rpx;
+  font-weight: 800;
+  border-radius: 16rpx;
+  white-space: nowrap;
 }
 
-.nav-button.active {
+.bottom-nav-item.active {
   color: #ffffff;
   background: #ff7f7f;
-  border-color: #ff7f7f;
 }
 
 .primary-button,
@@ -89,6 +105,7 @@ button::after {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 16rpx;
   margin: 26rpx 0 16rpx;
   font-size: 34rpx;
   font-weight: 800;
@@ -127,6 +144,7 @@ button::after {
   background: #ffe4b0;
 }
 
+.status-confirmed,
 .status-accepted {
   color: #276f6f;
   background: #cdeee9;
@@ -155,6 +173,13 @@ button::after {
   border-radius: 16rpx;
   text-align: center;
   box-shadow: 0 14rpx 26rpx rgba(126, 99, 74, 0.08);
+}
+
+text,
+input,
+textarea {
+  min-width: 0;
+  word-break: break-word;
 }
 
 .empty-face {

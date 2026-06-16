@@ -1,18 +1,14 @@
 const STATUS_META = {
   pending: { text: '待确认', className: 'status-pending' },
-  accepted: { text: '制作中', className: 'status-accepted' },
-  ready: { text: '可取餐', className: 'status-ready' },
+  confirmed: { text: '已确认', className: 'status-confirmed' },
   completed: { text: '已完成', className: 'status-completed' },
   cancelled: { text: '已取消', className: 'status-cancelled' },
+  accepted: { text: '已确认', className: 'status-confirmed' },
+  ready: { text: '已确认', className: 'status-confirmed' },
 };
 
 function pad(value) {
   return Number(value) < 10 ? '0' + Number(value) : String(value);
-}
-
-function formatPrice(cents) {
-  const value = Number(cents || 0) / 100;
-  return value % 1 === 0 ? String(value.toFixed(0)) : value.toFixed(2);
 }
 
 function formatDate(input) {
@@ -55,7 +51,6 @@ function getStatusMeta(status) {
 
 module.exports = {
   STATUS_META,
-  formatPrice,
   formatDate,
   getStatusMeta,
   todayKey,

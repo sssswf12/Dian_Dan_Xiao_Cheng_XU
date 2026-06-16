@@ -1,0 +1,85 @@
+<view class="page page-without-dock edit-page">
+  <view class="edit-header">
+    <view>
+      <text class="edit-kicker">菜单</text>
+      <text class="edit-title">{{title}}</text>
+    </view>
+    <button class="ghost-button header-button" bindtap="goBack">返回</button>
+  </view>
+
+  <view class="preview-panel">
+    <view class="preview-art art-{{itemForm.art}}" style="background: {{itemForm.themeBg}};">
+      <image wx:if="{{itemForm.imageUrl}}" class="preview-image" src="{{itemForm.imageUrl}}" mode="aspectFill" />
+      <view wx:else class="plate">
+        <view class="food-shape food-main" style="background: {{itemForm.themeAccent}};"></view>
+        <view class="food-shape food-small"></view>
+        <view class="food-shape food-dot"></view>
+      </view>
+    </view>
+
+    <view class="image-actions">
+      <button class="primary-button image-button" loading="{{uploading}}" disabled="{{uploading || saving}}" bindtap="chooseImage">上传图片</button>
+      <button wx:if="{{itemForm.imageUrl}}" class="ghost-button image-button" bindtap="removeImage">恢复图样</button>
+    </view>
+  </view>
+
+  <view class="section-title preset-title">
+    <text>选择图片</text>
+    <text class="preset-total">{{visualPresets.length}} 张</text>
+  </view>
+
+  <scroll-view class="preset-scroll" scroll-y enhanced show-scrollbar="{{true}}">
+    <view class="preset-list">
+      <view
+        wx:for="{{visualPresets}}"
+        wx:key="id"
+        class="preset-item {{itemForm.imageUrl === item.imageUrl ? 'active' : ''}}"
+        data-id="{{item.id}}"
+        bindtap="selectPreset"
+      >
+        <view class="preset-swatch">
+          <image class="preset-image" src="{{item.imageUrl}}" mode="aspectFit" />
+        </view>
+        <text>{{item.name}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="edit-form">
+    <view class="form-row">
+      <text class="form-label">名称</text>
+      <input class="form-input" placeholder="例如 番茄鸡蛋面" value="{{itemForm.name}}" data-field="name" bindinput="onItemInput" maxlength="40" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">分类</text>
+      <picker class="form-picker" mode="selector" range="{{itemCategoryNames}}" value="{{itemCategoryIndex}}" bindchange="onItemCategoryChange">
+        <view class="picker-value">{{itemCategoryNames[itemCategoryIndex]}}</view>
+      </picker>
+    </view>
+    <view class="form-row">
+      <text class="form-label">单位</text>
+      <input class="form-input" placeholder="份 / 杯 / 个" value="{{itemForm.unit}}" data-field="unit" bindinput="onItemInput" maxlength="12" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">标签</text>
+      <input class="form-input" placeholder="可不填" value="{{itemForm.tag}}" data-field="tag" bindinput="onItemInput" maxlength="12" />
+    </view>
+    <view class="form-row">
+      <text class="form-label">排序</text>
+      <input class="form-input" type="number" placeholder="数字越小越靠前" value="{{itemForm.sort}}" data-field="sort" bindinput="onItemInput" maxlength="6" />
+    </view>
+    <view class="textarea-row">
+      <text class="form-label">描述</text>
+      <textarea class="form-textarea" placeholder="简单说明内容" value="{{itemForm.desc}}" data-field="desc" bindinput="onItemInput" maxlength="120" auto-height />
+    </view>
+    <view class="form-row">
+      <text class="form-label">上架</text>
+      <switch checked="{{itemForm.enabled}}" bindchange="onItemEnabledChange" color="#4aa783" />
+    </view>
+  </view>
+
+  <view class="editor-actions">
+    <button class="ghost-button action-cancel" bindtap="goBack">取消</button>
+    <button class="primary-button action-save" loading="{{saving}}" bindtap="saveItem">保存</button>
+  </view>
+</view>
