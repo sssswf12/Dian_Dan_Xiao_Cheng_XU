@@ -83,6 +83,15 @@ function callOrderFunction(action, data) {
       }
 
       return result;
+    })
+    .catch(function handleCloudError(error) {
+      const message = String(error && (error.message || error.errMsg) || '');
+
+      if (/timeout/i.test(message)) {
+        throw new Error('云函数调用超时，请检查云函数是否已部署成功后重试');
+      }
+
+      throw error;
     });
 }
 
@@ -120,6 +129,29 @@ function getCurrentUser() {
   } catch (error) {
     return null;
   }
+}
+
+function getAdminUser() {
+  const adminSession = getAdminSession();
+
+  if (!adminSession) {
+    return null;
+  }
+
+  return {
+    id: 'admin',
+    account: adminSession.account || config.ADMIN_ACCOUNT,
+    name: adminSession.name || '管理员',
+    initial: '管',
+    note: '管理端',
+    enabled: true,
+    sort: 0,
+    isAdmin: true,
+  };
+}
+
+function getActiveUser() {
+  return getCurrentUser() || getAdminUser();
 }
 
 function saveCurrentUser(user) {
@@ -281,6 +313,8 @@ function toggleUser(userId, enabled, adminPin) {
 module.exports = {
   clearAdminSession,
   clearCurrentUser,
+  getActiveUser,
+  getAdminUser,
   getAdminSession,
   getCurrentUser,
   isAdminCredential,

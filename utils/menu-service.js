@@ -30,17 +30,34 @@ function callOrderFunction(action, data) {
       const result = response.result || {};
 
       if (!result.ok) {
+        if (/未知.*订单操作|未知.*操作/.test(String(result.message || ''))) {
+          throw new Error('云函数 orderService 不是最新版本，请先重新部署云函数');
+        }
+
         throw new Error(result.message || '菜单服务暂不可用');
       }
 
       return result;
+    })
+    .catch(function handleCloudError(error) {
+      const message = String(error && (error.message || error.errMsg) || '');
+
+      if (/timeout/i.test(message)) {
+        throw new Error('云函数调用超时，请检查云函数是否已部署成功后重试');
+      }
+
+      throw error;
     });
 }
 
 function filterVisible(items, includeHidden) {
+  const activeItems = (items || []).filter(function keepActive(item) {
+    return item.deleted !== true;
+  });
+
   return includeHidden
-    ? items
-    : items.filter(function keepEnabled(item) {
+    ? activeItems
+    : activeItems.filter(function keepEnabled(item) {
         return item.enabled;
       });
 }
@@ -110,7 +127,30 @@ function toggleMenuItem(itemId, enabled, adminPin) {
   return Promise.resolve(target);
 }
 
+function deleteMenuItem(itemId, adminPin) {
+  if (canUseCloud()) {
+    return callOrderFunction('deleteMenuItem', {
+      adminPin: adminPin,
+      itemId: itemId,
+    });
+  }
+
+  const items = readLocalItems().filter(function filterItem(item) {
+    return item.id !== itemId;
+  });
+  items.push({
+    id: itemId,
+    enabled: false,
+    deleted: true,
+    updatedAtMs: Date.now(),
+  });
+  writeLocalItems(items);
+
+  return Promise.resolve({ ok: true });
+}
+
 module.exports = {
+  deleteMenuItem,
   listMenuItems,
   saveMenuItem,
   toggleMenuItem,

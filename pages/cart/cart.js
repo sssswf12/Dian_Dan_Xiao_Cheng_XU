@@ -7,6 +7,7 @@ Page({
   data: {
     shop: config.SHOP,
     currentUser: null,
+    currentAdmin: null,
     cart: cartStore.getCart(),
     diningTypes: ['家里吃', '带走', '先备着'],
     diningTypeIndex: 0,
@@ -17,14 +18,7 @@ Page({
 
   onShow() {
     const currentAdmin = accountService.getAdminSession();
-    const currentUser = accountService.getCurrentUser();
-
-    if (currentAdmin) {
-      wx.reLaunch({
-        url: '/pages/admin/admin',
-      });
-      return;
-    }
+    const currentUser = accountService.getActiveUser();
 
     if (!currentUser) {
       wx.reLaunch({
@@ -35,6 +29,7 @@ Page({
 
     this.setData({
       currentUser: currentUser,
+      currentAdmin: currentAdmin,
     });
     this.refreshCart();
   },
@@ -95,7 +90,7 @@ Page({
       return;
     }
 
-    const currentUser = accountService.getCurrentUser();
+    const currentUser = accountService.getActiveUser();
     const cart = cartStore.getCart();
 
     if (!currentUser) {
@@ -164,8 +159,19 @@ Page({
   },
 
   goProfile() {
+    if (this.data.currentAdmin) {
+      this.goAdmin();
+      return;
+    }
+
     wx.reLaunch({
       url: '/pages/account/account',
+    });
+  },
+
+  goAdmin() {
+    wx.reLaunch({
+      url: '/pages/admin/admin',
     });
   },
 

@@ -17,6 +17,12 @@ const VISUAL_PRESETS = [
   { id: 'toast', name: '吐司', art: 'toast', themeBg: '#F4D2A5', themeAccent: '#C98345', imageUrl: '/assets/menu/toast.svg' },
   { id: 'sandwich', name: '三明治', art: 'sandwich', themeBg: '#FFE4A6', themeAccent: '#7FAF66', imageUrl: '/assets/menu/sandwich.svg' },
   { id: 'pizza', name: '披萨', art: 'pizza', themeBg: '#FFE4A6', themeAccent: '#E06C5C', imageUrl: '/assets/menu/pizza.svg' },
+  { id: 'hotpot', name: '火锅', art: 'hotpot', themeBg: '#FFE3D2', themeAccent: '#D95C5C', imageUrl: '/assets/menu/hotpot.svg' },
+  { id: 'burger', name: '汉堡', art: 'burger', themeBg: '#FFE7BA', themeAccent: '#E0A34A', imageUrl: '/assets/menu/burger.svg' },
+  { id: 'sushi', name: '寿司', art: 'sushi', themeBg: '#EAF7F3', themeAccent: '#2F4F4F', imageUrl: '/assets/menu/sushi.svg' },
+  { id: 'bento', name: '便当', art: 'bento', themeBg: '#FFF1D6', themeAccent: '#6D5650', imageUrl: '/assets/menu/bento.svg' },
+  { id: 'corn', name: '玉米', art: 'corn', themeBg: '#F1F8C9', themeAccent: '#F0C842', imageUrl: '/assets/menu/corn.svg' },
+  { id: 'sausage', name: '香肠', art: 'sausage', themeBg: '#FFE1D8', themeAccent: '#D95C5C', imageUrl: '/assets/menu/sausage.svg' },
   { id: 'fish', name: '鱼肉', art: 'fish', themeBg: '#D3F0F0', themeAccent: '#4FAFB1', imageUrl: '/assets/menu/fish.svg' },
   { id: 'chicken', name: '鸡块', art: 'chicken', themeBg: '#FFE1B5', themeAccent: '#E49B3F', imageUrl: '/assets/menu/chicken.svg' },
   { id: 'beef', name: '牛肉', art: 'beef', themeBg: '#FFD6D1', themeAccent: '#C75D5B', imageUrl: '/assets/menu/beef.svg' },
@@ -36,6 +42,8 @@ const VISUAL_PRESETS = [
   { id: 'smoothie', name: '奶昔', art: 'smoothie', themeBg: '#FFE0EC', themeAccent: '#E577A0', imageUrl: '/assets/menu/smoothie.svg' },
   { id: 'soda', name: '汽水', art: 'soda', themeBg: '#D9F0FF', themeAccent: '#63A8D6', imageUrl: '/assets/menu/soda.svg' },
   { id: 'coffee', name: '咖啡', art: 'coffee', themeBg: '#D8C7B8', themeAccent: '#7C5F55', imageUrl: '/assets/menu/coffee.svg' },
+  { id: 'cola', name: '可乐', art: 'cola', themeBg: '#FFE1E1', themeAccent: '#B54B4B', imageUrl: '/assets/menu/cola.svg' },
+  { id: 'matcha', name: '抹茶', art: 'matcha', themeBg: '#E3F3D6', themeAccent: '#7FAF66', imageUrl: '/assets/menu/matcha.svg' },
   { id: 'dessert', name: '布丁', art: 'dessert', themeBg: '#FFD3D5', themeAccent: '#EF6C74', imageUrl: '/assets/menu/pudding.svg' },
   { id: 'cake', name: '蛋糕', art: 'cake', themeBg: '#FFE0EC', themeAccent: '#E577A0', imageUrl: '/assets/menu/cake.svg' },
   { id: 'cookie', name: '饼干', art: 'cookie', themeBg: '#F1D0A8', themeAccent: '#B56F3D', imageUrl: '/assets/menu/cookie.svg' },
@@ -43,6 +51,8 @@ const VISUAL_PRESETS = [
   { id: 'donut', name: '甜甜圈', art: 'donut', themeBg: '#F1D0A8', themeAccent: '#E577A0', imageUrl: '/assets/menu/donut.svg' },
   { id: 'tart', name: '蛋挞', art: 'tart', themeBg: '#FFE4A6', themeAccent: '#D99155', imageUrl: '/assets/menu/tart.svg' },
   { id: 'pancake', name: '松饼', art: 'pancake', themeBg: '#FFE4A6', themeAccent: '#D99155', imageUrl: '/assets/menu/pancake.svg' },
+  { id: 'candy', name: '糖果', art: 'candy', themeBg: '#FFE3EF', themeAccent: '#E577A0', imageUrl: '/assets/menu/candy.svg' },
+  { id: 'chocolate', name: '巧克力', art: 'chocolate', themeBg: '#E7D5C8', themeAccent: '#7C4A3A', imageUrl: '/assets/menu/chocolate.svg' },
   { id: 'apple', name: '苹果', art: 'apple', themeBg: '#FFD9DF', themeAccent: '#E95F6D', imageUrl: '/assets/menu/apple.svg' },
   { id: 'banana', name: '香蕉', art: 'banana', themeBg: '#FFEAB8', themeAccent: '#E1B340', imageUrl: '/assets/menu/banana.svg' },
   { id: 'fruit', name: '水果杯', art: 'fruit', themeBg: '#F6D9F0', themeAccent: '#C96AAE', imageUrl: '/assets/menu/fruit-cup.svg' },
@@ -54,6 +64,12 @@ const VISUAL_PRESETS = [
   { id: 'grape', name: '葡萄', art: 'grape', themeBg: '#E8D8F4', themeAccent: '#A86CC0', imageUrl: '/assets/menu/grape.svg' },
   { id: 'watermelon', name: '西瓜', art: 'watermelon', themeBg: '#DDF2C9', themeAccent: '#E95F6D', imageUrl: '/assets/menu/watermelon.svg' },
   { id: 'pear', name: '梨子', art: 'pear', themeBg: '#E9F5B9', themeAccent: '#91B84D', imageUrl: '/assets/menu/pear.svg' },
+  { id: 'mango', name: '芒果', art: 'mango', themeBg: '#FFF0B8', themeAccent: '#F0A348', imageUrl: '/assets/menu/mango.svg' },
+  { id: 'kiwi', name: '猕猴桃', art: 'kiwi', themeBg: '#E7F2C9', themeAccent: '#A7C957', imageUrl: '/assets/menu/kiwi.svg' },
+  { id: 'pineapple', name: '菠萝', art: 'pineapple', themeBg: '#FFF1C2', themeAccent: '#F0B84A', imageUrl: '/assets/menu/pineapple.svg' },
+  { id: 'tomato', name: '番茄', art: 'tomato', themeBg: '#FFE0DF', themeAccent: '#E95F6D', imageUrl: '/assets/menu/tomato.svg' },
+  { id: 'carrot', name: '胡萝卜', art: 'carrot', themeBg: '#EAF5D8', themeAccent: '#F0A348', imageUrl: '/assets/menu/carrot.svg' },
+  { id: 'potato', name: '土豆', art: 'potato', themeBg: '#F3E1C8', themeAccent: '#C98D54', imageUrl: '/assets/menu/potato.svg' },
   { id: 'popcorn', name: '爆米花', art: 'popcorn', themeBg: '#FFF0B8', themeAccent: '#FF7F7F', imageUrl: '/assets/menu/popcorn.svg' },
   { id: 'yogurt', name: '酸奶', art: 'yogurt', themeBg: '#F0F8FF', themeAccent: '#E577A0', imageUrl: '/assets/menu/yogurt.svg' },
   { id: 'other', name: '其他', art: 'other', themeBg: '#E6EAF2', themeAccent: '#6C7A96', imageUrl: '/assets/menu/other.svg' },
@@ -231,6 +247,7 @@ function normalizeMenuItem(item, index) {
     themeAccent: item.themeAccent || '#FF7F7F',
     imageUrl: String(item.imageUrl || '').trim() || getPresetImage(art),
     enabled: item.enabled !== false,
+    deleted: item.deleted === true,
     sort: Number.isNaN(Number(item.sort)) ? index || 0 : Number(item.sort),
   };
 }
@@ -247,6 +264,11 @@ function mergeMenuItems(customItems) {
   });
 
   (customItems || []).forEach(function addCustom(item, index) {
+    if (item && item.deleted === true && item.id) {
+      delete byId[item.id];
+      return;
+    }
+
     const base = item.id ? byId[item.id] || {} : {};
     const normalized = normalizeMenuItem(
       Object.assign({}, base, item),

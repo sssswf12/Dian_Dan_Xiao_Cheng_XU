@@ -96,13 +96,31 @@
         <button class="primary-button add-content-button" bindtap="createItem">新增内容</button>
       </view>
 
-      <view class="section-title">
-        <text>菜单列表</text>
-        <text class="menu-total">{{menuItems.length}} 项</text>
+      <view class="menu-status-switch">
+        <view
+          wx:for="{{menuStatusFilters}}"
+          wx:key="id"
+          class="menu-status-tab {{activeMenuStatus === item.id ? 'active' : ''}}"
+          data-status="{{item.id}}"
+          bindtap="selectMenuStatus"
+        >
+          {{item.name}}
+        </view>
       </view>
 
-      <view class="manage-list">
-        <view wx:for="{{menuItems}}" wx:key="id" class="manage-card menu-manage-card {{item.enabled ? '' : 'is-disabled'}}">
+      <view class="section-title">
+        <text>{{activeMenuStatusTitle}}</text>
+        <text class="menu-total">{{displayMenuItems.length}} 项</text>
+      </view>
+
+      <view wx:if="{{displayMenuItems.length}}" class="manage-list">
+        <view
+          wx:for="{{displayMenuItems}}"
+          wx:key="id"
+          class="manage-card menu-manage-card {{item.enabled ? '' : 'is-disabled'}}"
+          data-index="{{index}}"
+          bindtap="editItem"
+        >
           <view class="manage-thumb art-{{item.art}}" style="background: {{item.themeBg}};">
             <image wx:if="{{item.imageUrl}}" class="manage-thumb-image" src="{{item.imageUrl}}" mode="aspectFill" />
             <view wx:else class="manage-thumb-dot" style="background: {{item.themeAccent}};"></view>
@@ -113,10 +131,17 @@
             <text class="manage-desc">{{item.desc}}</text>
           </view>
           <view class="manage-actions">
-            <button class="ghost-button mini-action" data-index="{{index}}" bindtap="editItem">编辑</button>
-            <button class="{{item.enabled ? 'danger-button' : 'primary-button'}} mini-action" data-index="{{index}}" bindtap="toggleItem">{{item.enabled ? '下架' : '上架'}}</button>
+            <button class="ghost-button mini-action" data-index="{{index}}" catchtap="editItem">编辑</button>
+            <button class="{{item.enabled ? 'danger-button' : 'primary-button'}} mini-action" data-index="{{index}}" catchtap="toggleItem">{{item.enabled ? '下架' : '恢复上架'}}</button>
+            <button wx:if="{{!item.enabled}}" class="danger-button mini-action" data-index="{{index}}" catchtap="deleteItem">删除</button>
           </view>
         </view>
+      </view>
+
+      <view wx:else class="empty-state menu-empty-state">
+        <view class="empty-face"></view>
+        <text class="empty-title">{{activeMenuStatus === 'disabled' ? '暂无已下架内容' : '暂无在售内容'}}</text>
+        <text class="empty-text">{{activeMenuStatus === 'disabled' ? '下架后的内容会放在这里，可随时恢复上架。' : '新增或恢复上架后会显示在这里。'}}</text>
       </view>
     </view>
 
@@ -160,7 +185,7 @@
       </view>
 
       <view class="manage-list">
-        <view wx:for="{{users}}" wx:key="id" class="manage-card {{item.enabled ? '' : 'is-disabled'}}">
+        <view wx:for="{{users}}" wx:key="id" class="manage-card user-manage-card {{item.enabled ? '' : 'is-disabled'}}">
           <view class="user-avatar">{{item.initial}}</view>
           <view class="manage-main">
             <text class="manage-title">{{item.name}}</text>

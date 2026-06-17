@@ -86,6 +86,7 @@
     <view class="bottom-nav-item" bindtap="goMenu">点单</view>
     <view class="bottom-nav-item active">确认</view>
     <view class="bottom-nav-item" bindtap="goOrders">订单</view>
-    <view class="bottom-nav-item" bindtap="goProfile">我</view>
+    <view wx:if="{{!currentAdmin}}" class="bottom-nav-item" bindtap="goProfile">我</view>
+    <view wx:else class="bottom-nav-item" bindtap="goAdmin">管理</view>
   </view>
 </view>

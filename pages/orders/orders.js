@@ -5,20 +5,14 @@ const cartStore = require('../../utils/cart');
 Page({
   data: {
     currentUser: null,
+    currentAdmin: null,
     orders: [],
     loading: false,
   },
 
   onShow() {
     const currentAdmin = accountService.getAdminSession();
-    const currentUser = accountService.getCurrentUser();
-
-    if (currentAdmin) {
-      wx.reLaunch({
-        url: '/pages/admin/admin',
-      });
-      return;
-    }
+    const currentUser = accountService.getActiveUser();
 
     if (!currentUser) {
       wx.reLaunch({
@@ -29,6 +23,7 @@ Page({
 
     this.setData({
       currentUser: currentUser,
+      currentAdmin: currentAdmin,
     });
     this.loadOrders();
   },
@@ -38,7 +33,7 @@ Page({
   },
 
   loadOrders() {
-    const currentUser = accountService.getCurrentUser();
+    const currentUser = accountService.getActiveUser();
 
     if (!currentUser) {
       this.setData({
@@ -139,8 +134,19 @@ Page({
   },
 
   goProfile() {
+    if (this.data.currentAdmin) {
+      this.goAdmin();
+      return;
+    }
+
     wx.reLaunch({
       url: '/pages/account/account',
+    });
+  },
+
+  goAdmin() {
+    wx.reLaunch({
+      url: '/pages/admin/admin',
     });
   },
 

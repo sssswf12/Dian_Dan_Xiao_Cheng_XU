@@ -159,6 +159,15 @@ function callOrderFunction(action, data) {
       }
 
       return result;
+    })
+    .catch(function handleCloudError(error) {
+      const message = String(error && (error.message || error.errMsg) || '');
+
+      if (/timeout/i.test(message)) {
+        throw new Error('云函数调用超时，请检查云函数是否已部署成功后重试');
+      }
+
+      throw error;
     });
 }
 

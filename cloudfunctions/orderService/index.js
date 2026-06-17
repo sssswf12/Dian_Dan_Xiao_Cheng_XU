@@ -154,6 +154,7 @@ function sanitizeMenuItem(rawItem) {
     unit: cleanText(rawItem.unit, 12) || '份',
     tag: cleanText(rawItem.tag, 12),
     enabled: rawItem.enabled !== false,
+    deleted: false,
     sort: parseInt(rawItem.sort, 10) || 100,
     art: cleanText(rawItem.art, 20) || category,
     themeBg: cleanText(rawItem.themeBg, 20) || '#FFF4D7',
@@ -388,6 +389,31 @@ async function toggleMenuItem(event) {
   const patch = {
     id: itemId,
     enabled: Boolean(event.enabled),
+    deleted: false,
+    updatedAtMs: Date.now(),
+  };
+
+  await upsertPatch(MENU_COLLECTION, itemId, patch);
+
+  return {
+    ok: true,
+    item: patch,
+  };
+}
+
+async function deleteMenuItem(event) {
+  assertAdminPin(event.adminPin);
+
+  const itemId = cleanText(event.itemId, 60);
+
+  if (!itemId) {
+    throw new Error('缺少内容编号');
+  }
+
+  const patch = {
+    id: itemId,
+    enabled: false,
+    deleted: true,
     updatedAtMs: Date.now(),
   };
 
@@ -508,6 +534,8 @@ exports.main = async function main(event) {
         return await saveMenuItem(payload);
       case 'toggleMenuItem':
         return await toggleMenuItem(payload);
+      case 'deleteMenuItem':
+        return await deleteMenuItem(payload);
       case 'listUsers':
         return await listUsers(payload);
       case 'loginUser':
@@ -517,7 +545,7 @@ exports.main = async function main(event) {
       case 'toggleUser':
         return await toggleUser(payload);
       default:
-        throw new Error('未知的订单操作');
+        throw new Error('未知的服务操作，请重新部署 orderService 云函数');
     }
   } catch (error) {
     return {

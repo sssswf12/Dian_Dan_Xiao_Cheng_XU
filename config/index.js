@@ -1,4 +1,4 @@
-const CLOUD_ENV_ID = '';
+const CLOUD_ENV_ID = 'cloud1-d9g0rfi2113df7950';
 
 // Only used when CLOUD_ENV_ID is empty for local preview.
 // For production cloud mode, set ADMIN_PIN in the cloud function environment.

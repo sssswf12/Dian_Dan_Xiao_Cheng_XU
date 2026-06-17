@@ -11,10 +11,15 @@ const STATUS_FILTERS = [
   { id: 'cancelled', name: '已取消' },
 ];
 const ADMIN_TABS = [
+  { id: 'shop', name: '点单' },
   { id: 'orders', name: '订单' },
   { id: 'menu', name: '菜单' },
   { id: 'users', name: '成员' },
   { id: 'me', name: '我' },
+];
+const MENU_STATUS_FILTERS = [
+  { id: 'enabled', name: '在售' },
+  { id: 'disabled', name: '已下架' },
 ];
 
 function createUserForm() {
@@ -83,6 +88,16 @@ function isAdminTab(tabId) {
   });
 }
 
+function filterMenuItems(items, status) {
+  return (items || []).filter(function filterItem(item) {
+    return status === 'disabled' ? item.enabled === false : item.enabled !== false;
+  });
+}
+
+function getMenuStatusTitle(status) {
+  return status === 'disabled' ? '已下架列表' : '在售列表';
+}
+
 Page({
   data: {
     authorized: false,
@@ -99,6 +114,10 @@ Page({
     orders: [],
     stats: buildStats([]),
     menuItems: [],
+    displayMenuItems: [],
+    activeMenuStatus: 'enabled',
+    activeMenuStatusTitle: getMenuStatusTitle('enabled'),
+    menuStatusFilters: MENU_STATUS_FILTERS,
     userForm: createUserForm(),
     editingUserId: '',
     users: [],
@@ -208,6 +227,9 @@ Page({
       orders: [],
       stats: buildStats([]),
       menuItems: [],
+      displayMenuItems: [],
+      activeMenuStatus: 'enabled',
+      activeMenuStatusTitle: getMenuStatusTitle('enabled'),
       users: [],
     });
 
@@ -224,7 +246,16 @@ Page({
   },
 
   switchAdminTab(event) {
-    const nextTab = this.setActiveTab(event.currentTarget.dataset.tab);
+    const tab = event.currentTarget.dataset.tab;
+
+    if (tab === 'shop') {
+      wx.reLaunch({
+        url: '/pages/menu/menu',
+      });
+      return;
+    }
+
+    const nextTab = this.setActiveTab(tab);
     this.loadCurrentTab(nextTab);
   },
 
@@ -378,8 +409,12 @@ Page({
     return menuService
       .listMenuItems({ includeHidden: true })
       .then((items) => {
+        const activeMenuStatus = this.data.activeMenuStatus;
+
         this.setData({
           menuItems: items,
+          displayMenuItems: filterMenuItems(items, activeMenuStatus),
+          activeMenuStatusTitle: getMenuStatusTitle(activeMenuStatus),
         });
       })
       .finally(() => {
@@ -392,6 +427,16 @@ Page({
       });
   },
 
+  selectMenuStatus(event) {
+    const activeMenuStatus = event.currentTarget.dataset.status || 'enabled';
+
+    this.setData({
+      activeMenuStatus: activeMenuStatus,
+      activeMenuStatusTitle: getMenuStatusTitle(activeMenuStatus),
+      displayMenuItems: filterMenuItems(this.data.menuItems, activeMenuStatus),
+    });
+  },
+
   createItem() {
     wx.navigateTo({
       url: '/pages/menu-edit/menu-edit',
@@ -399,7 +444,7 @@ Page({
   },
 
   editItem(event) {
-    const item = this.data.menuItems[event.currentTarget.dataset.index];
+    const item = this.data.displayMenuItems[event.currentTarget.dataset.index];
 
     if (!item) {
       return;
@@ -411,7 +456,7 @@ Page({
   },
 
   toggleItem(event) {
-    const item = this.data.menuItems[event.currentTarget.dataset.index];
+    const item = this.data.displayMenuItems[event.currentTarget.dataset.index];
 
     if (!item) {
       return;
@@ -432,6 +477,56 @@ Page({
           icon: 'none',
         });
       });
+  },
+
+  deleteItem(event) {
+    const item = this.data.displayMenuItems[event.currentTarget.dataset.index];
+
+    if (!item) {
+      return;
+    }
+
+    if (item.enabled) {
+      wx.showToast({
+        title: '请先下架再删除',
+        icon: 'none',
+      });
+      return;
+    }
+
+    wx.showModal({
+      title: '删除内容',
+      content: '删除后不会再出现在菜单里，确定删除“' + item.name + '”吗？',
+      confirmColor: '#d95c5c',
+      success: (result) => {
+        if (!result.confirm) {
+          return;
+        }
+
+        wx.showLoading({
+          title: '删除中',
+          mask: true,
+        });
+
+        menuService
+          .deleteMenuItem(item.id, this.data.adminPin)
+          .then(() => {
+            wx.hideLoading();
+            wx.showToast({
+              title: '已删除',
+              icon: 'success',
+            });
+            this.loadMenuItems(false).catch(this.handleLoadError);
+          })
+          .catch((error) => {
+            wx.hideLoading();
+            wx.showToast({
+              title: error.message || '删除失败',
+              icon: 'none',
+            });
+          });
+      },
+    });
   },
 
   loadUsers(showLoading) {
